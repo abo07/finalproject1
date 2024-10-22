@@ -77,8 +77,7 @@ class _signUp extends State<signUp> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      // Navigate to the second screen when the button is pressed
-                      Navigator.pushNamed(context, '/second');
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
                     },
                     child: Text('create account'),
                   ),
@@ -91,7 +90,9 @@ class _signUp extends State<signUp> {
                     style: ButtonStyle(
                       foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
                     ),
-                    onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage())); },
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+                      },
                     child: Text('Already have an account ? login.'),
                   ),
                 ],

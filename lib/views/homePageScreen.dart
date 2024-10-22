@@ -1,5 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
+import 'editProfile.dart';
 
 class Homepagescreen extends StatefulWidget {
   const Homepagescreen({super.key, required this.title});
@@ -24,16 +25,14 @@ class _Homepagescreen extends State<Homepagescreen> {
           child: Column(
             children: <Widget>[
 
-              Text("this is the home page"),
-              TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your  username',
-                ),
-              ),
-
-
-            ],
+              ElevatedButton(
+                onPressed: () {
+                  // Navigate to the second screen when the button is pressed
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => editProfile(title: 'edit',)));
+                },
+                child: Icon(CupertinoIcons.profile_circled)
+              ),            ],
 
 
           ),
