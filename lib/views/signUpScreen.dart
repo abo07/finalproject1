@@ -13,6 +13,14 @@ class signUp extends StatefulWidget {
 
 class _signUp extends State<signUp> {
 
+  final _firstName=TextEditingController();
+  final _LastName=TextEditingController();
+  final _txtEmail=TextEditingController();
+  final _username=TextEditingController();
+  final _NewPassword=TextEditingController();
+  final _ConfirmPassword=TextEditingController();
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +34,7 @@ class _signUp extends State<signUp> {
 
               Text("first name:"),
               TextField(
+                controller: _firstName,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your first name',
@@ -33,6 +42,8 @@ class _signUp extends State<signUp> {
               ),
               Text("last name:"),
               TextField(
+                controller: _LastName,
+
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your last name',
@@ -40,6 +51,8 @@ class _signUp extends State<signUp> {
               ),
               Text("Email:"),
               TextField(
+                controller: _txtEmail,
+
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your Email',
@@ -48,6 +61,8 @@ class _signUp extends State<signUp> {
 
               Text("username"),
               TextField(
+                controller: _username,
+
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your New username',
@@ -56,6 +71,8 @@ class _signUp extends State<signUp> {
 
               Text("New Password"),
               TextField(
+                controller: _NewPassword,
+
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your New Password',
@@ -64,6 +81,8 @@ class _signUp extends State<signUp> {
 
               Text("Confirm New Password"),
               TextField(
+                controller: _ConfirmPassword,
+
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your New Password',
@@ -75,12 +94,18 @@ class _signUp extends State<signUp> {
                   const SizedBox(
                     width: 200.0,
                   ),
+
+
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+
                     },
+
                     child: Text('create account'),
                   ),
+
+
 
                   const SizedBox(
                     width: 20.0,
@@ -95,6 +120,13 @@ class _signUp extends State<signUp> {
                       },
                     child: Text('Already have an account ? login.'),
                   ),
+
+                  const SizedBox(
+                    width: 20.0,
+                  ),
+
+
+
                 ],
               ),
 
