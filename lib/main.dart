@@ -1,3 +1,4 @@
+import 'package:finalproject1/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'views/signUpScreen.dart';
 import 'views/homePageScreen.dart';
@@ -7,6 +8,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  final TextEditingController _txt1= TextEditingController();
+  final TextEditingController _txt2= TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
               Text("username"),
               TextField(
+                controller: _txt1,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your  username',
@@ -55,12 +61,14 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
 
 
-              Text("Password"),
+              Text("Password ${_txt1.text}"),
               TextField(
+                controller: _txt2,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your  Password',
                 ),
+
               ),
 
               Row(
@@ -73,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       // Navigate to the second screen when the button is pressed
                       Navigator.push(context,
                           MaterialPageRoute(builder: (context) => signUp(title: 'ahmad',)));
+
                     },
                     child: Text('do not have an account?create an account'),
                   ),
@@ -86,42 +95,18 @@ class _MyHomePageState extends State<MyHomePage> {
                       foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
                     ),
                     onPressed: () {
-
-                      // Navigate to the second screen when the button is pressed
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
-
-                      showDialog<String>(
-                        context: context,
-                        builder: (BuildContext context) => AlertDialog(
-                          title: const Text('AlertDialog Title'),
-                          content: const Text('AlertDialog description'),
-                          actions: <Widget>[
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'Cancel'),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, 'OK'),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
+                       Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
+                      var uti = new utils();
+                      uti.showMyDialog(context, _txt1.text, _txt2.text,'ahmad');
                     },
                     child: Text('login'),
                   ),
 
-                  TextButton(
-                    child: const Text('Approve'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
 
                 ],
               ),
 
+              // utils.showM(_txt1.text, _txt2.text, 'abo mok', context),
             ],
 
 

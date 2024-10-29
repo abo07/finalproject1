@@ -12,8 +12,6 @@ class editProfile extends StatefulWidget {
 
 class _editProfile extends State<editProfile> {
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +30,6 @@ class _editProfile extends State<editProfile> {
           ),
         ),
       ),
-
 
 
     );

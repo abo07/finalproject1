@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:finalproject1/main.dart';
 
+import '../utils/utils.dart';
+
 
 class signUp extends StatefulWidget {
   const signUp({super.key, required this.title});
@@ -99,6 +101,8 @@ class _signUp extends State<signUp> {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+                      var uti1 = new utils();
+                      uti1.showMyDialog(context, _firstName.text, _LastName.text,_txtEmail.text);
 
                     },
 
