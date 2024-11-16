@@ -1,3 +1,4 @@
+import 'package:finalproject1/utils/DB.dart';
 import 'package:flutter/material.dart';
 import 'package:finalproject1/main.dart';
 
@@ -30,7 +31,7 @@ class _signUp extends State<signUp> {
       body: Center(
         child: Container(
           alignment: Alignment.center,
-          width: 800,
+          width: MediaQuery.of(context).size.width,
           child: Column(
             children: <Widget>[
 
@@ -92,6 +93,7 @@ class _signUp extends State<signUp> {
               ),
 
               Row(
+
                 children: [
                   const SizedBox(
                     width: 200.0,
@@ -104,6 +106,7 @@ class _signUp extends State<signUp> {
                       var uti1 = new utils();
                       uti1.showMyDialog(context, _firstName.text, _LastName.text,_txtEmail.text);
 
+                      insertUser("abo", "ahmad", "pass");
                     },
 
                     child: Text('create account'),
@@ -120,6 +123,7 @@ class _signUp extends State<signUp> {
                       foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
                     ),
                     onPressed: () {
+                      insertUser('firstName', "secondName", "passWord");
                       Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
                       },
                     child: Text('Already have an account ? login.'),

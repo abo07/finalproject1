@@ -1,3 +1,4 @@
+import 'package:finalproject1/utils/DB.dart';
 import 'package:finalproject1/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'views/signUpScreen.dart';
@@ -78,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   ElevatedButton(
                     onPressed: () {
+
                       // Navigate to the second screen when the button is pressed
                       Navigator.push(context,
                           MaterialPageRoute(builder: (context) => signUp(title: 'ahmad',)));
