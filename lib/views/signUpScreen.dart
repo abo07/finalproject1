@@ -1,3 +1,4 @@
+import 'package:finalproject1/models/User.dart';
 import 'package:finalproject1/utils/DB.dart';
 import 'package:flutter/material.dart';
 import 'package:finalproject1/main.dart';
@@ -105,8 +106,9 @@ class _signUp extends State<signUp> {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
                       var uti1 = new utils();
                       uti1.showMyDialog(context, _firstName.text, _LastName.text,_txtEmail.text);
+                      User user2=new User();
 
-                      insertUser("abo", "ahmad", "pass");
+                      insertUser(user2);
                     },
 
                     child: Text('create account'),
@@ -123,7 +125,12 @@ class _signUp extends State<signUp> {
                       foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
                     ),
                     onPressed: () {
-                      insertUser('firstName', "secondName", "passWord");
+                      User user1=new User();
+                      user1.firstName="Ahmad";
+                      user1.lastName="AboMokh";
+                      user1.password="ahmad3284923";
+                      user1.createdDateTime="21/10/2024";
+                      insertUser(user1);
                       Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
                       },
                     child: Text('Already have an account ? login.'),
