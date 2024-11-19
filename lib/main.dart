@@ -85,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           MaterialPageRoute(builder: (context) => signUp(title: 'ahmad',)));
 
                     },
-                    child: Text('do not have an account?create an account'),
+                    child: Text('create'),
                   ),
 
                   const SizedBox(
