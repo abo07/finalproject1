@@ -26,6 +26,8 @@ class _signUp extends State<signUp> {
 
   void insertUserFunction()
   {
+
+    var uti =new utils();
     if(_firstName!="" && _txtEmail!="" && _username!="" && _NewPassword!="")
       {
         var user =new User();
@@ -34,6 +36,8 @@ class _signUp extends State<signUp> {
         user.UserName=_username.text;
         user.password=_NewPassword.text;
         insertUser(user);
+        uti.showMyDialog(context, "SUCCESS!!", "", "");
+
 
 
       }
@@ -127,6 +131,9 @@ class _signUp extends State<signUp> {
                       var uti1 = new utils();
                       uti1.showMyDialog(context, _firstName.text, _LastName.text,_txtEmail.text);
                       User user2=new User();
+                      user2.firstName=_firstName.text;
+                      user2.lastName=_LastName.text;
+                      user2.password=_txtEmail.text;
 
                       insertUser(user2);
                     },
@@ -150,7 +157,8 @@ class _signUp extends State<signUp> {
                       user1.lastName="AboMokh";
                       user1.password="ahmad3284923";
                       user1.createdDateTime="21/10/2024";
-                      insertUser(user1);
+                      insertUserFunction();
+
                       Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
                       },
                     child: Text('Already have an account ? login.'),
