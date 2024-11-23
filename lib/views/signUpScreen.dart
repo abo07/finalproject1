@@ -24,6 +24,26 @@ class _signUp extends State<signUp> {
   final _NewPassword=TextEditingController();
   final _ConfirmPassword=TextEditingController();
 
+  void insertUserFunction()
+  {
+    if(_firstName!="" && _txtEmail!="" && _username!="" && _NewPassword!="")
+      {
+        var user =new User();
+        user.firstName=_firstName.text;
+        user.Email=_txtEmail.text;
+        user.UserName=_username.text;
+        user.password=_NewPassword.text;
+        insertUser(user);
+
+
+      }
+    else
+      {
+        var uti =new utils();
+        uti.showMyDialog(context, "Reguired", "", "first name and email and username and new password is required");
+
+      }
+  }
 
 
   @override

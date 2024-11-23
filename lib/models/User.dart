@@ -5,12 +5,16 @@ class User {
     this.lastName	 = "",
     this.password	 = "",
     this.createdDateTime="",
+    this.Email="",
+    this.UserName="",
   });
 
   int userID;
   String firstName;
   String lastName	;
   String password	;
+  String Email	;
+  String UserName;
   String createdDateTime;
 
 
@@ -19,6 +23,8 @@ class User {
     firstName: json["firstName"],
     lastName	: json["lastName	"],
     password	: json["password	"],
+    Email: json["Email"],
+    UserName: json["UserName"],
     createdDateTime: json["createdDateTime"],
 
   );
@@ -28,6 +34,8 @@ class User {
         "firstName": firstName,
         "lastName	": lastName	,
         "password	": password	,
+        "Email	": Email	,
+        "UserName	": UserName	,
         "createdDateTime":createdDateTime,
       };
 }
