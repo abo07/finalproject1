@@ -26,7 +26,7 @@ Future<void> showUsers() async {
   var results = await _conn.query(
     'select * from users',);
   for (var row in results) {
-    print('userID: ${row[0]}, firstName: ${row[1]} lastName: ${row[2]}');
+    print('userID: ${row[0]}, firstName: ${row[1]} Email: ${row[2]}');
   }
 }
 
@@ -40,8 +40,8 @@ Future<void> insertUser( User user) async {
   connectToDB();
 
   var result = await _conn.query(
-      'insert into users (firstName, password, lastName) values (?, ?, ?)',
-      [user.firstName, user.password, user.lastName]);
+      'insert into users (firstName, Email, lastName) values (?, ?, ?)',
+      [user.firstName, user.Email, user.lastName]);
   print('Inserted row id=${result.insertId}');
 
 

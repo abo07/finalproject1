@@ -15,6 +15,11 @@ class _editProfile extends State<editProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text("Edit profile"),
+      ),
+
       body: Center(
         child: Container(
           alignment: Alignment.center,

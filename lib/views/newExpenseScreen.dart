@@ -6,16 +6,16 @@ import 'package:finalproject1/main.dart';
 import '../utils/utils.dart';
 
 
-class signUp extends StatefulWidget {
-  const signUp({super.key, required this.title});
+class newExpenseScreen extends StatefulWidget {
+  const newExpenseScreen({super.key, required this.title});
 
   final String title;
 
   @override
-  State<signUp> createState() => _signUp();
+  State<newExpenseScreen> createState() => _signUp();
 }
 
-class _signUp extends State<signUp> {
+class _signUp extends State<newExpenseScreen> {
 
   final _firstName=TextEditingController();
   final _LastName=TextEditingController();
@@ -37,6 +37,7 @@ class _signUp extends State<signUp> {
         user.password=_NewPassword.text;
         insertUser(user);
         uti.showMyDialog(context, "SUCCESS!!", "", "");
+
       }
     else
       {
@@ -52,7 +53,7 @@ class _signUp extends State<signUp> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("Sign up"),
+        title: Text("new expense"),
       ),
 
       body: Center(

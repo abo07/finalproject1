@@ -6,7 +6,7 @@ class User {
     this.password	 = "",
     this.createdDateTime="",
     this.Email="",
-    this.UserName="",
+    this.userName="",
   });
 
   int userID;
@@ -14,7 +14,7 @@ class User {
   String lastName	;
   String password	;
   String Email	;
-  String UserName;
+  String userName;
   String createdDateTime;
 
 
@@ -24,7 +24,7 @@ class User {
     lastName	: json["lastName	"],
     password	: json["password	"],
     Email: json["Email"],
-    UserName: json["UserName"],
+    userName: json["UserName"],
     createdDateTime: json["createdDateTime"],
 
   );
@@ -35,7 +35,7 @@ class User {
         "lastName	": lastName	,
         "password	": password	,
         "Email	": Email	,
-        "UserName	": UserName	,
+        "UserName	": userName	,
         "createdDateTime":createdDateTime,
       };
 }
