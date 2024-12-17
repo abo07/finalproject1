@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/utils.dart';
 
-const List<String> list = <String>['Home', 'Two', 'Three', 'Four'];
+const List<String> list = <String>['Housing', 'Transportation', 'Food', 'Health & Insurance','Debt & Loans','Savings & Investments','Gifts & Donations'];
 
 class newExpenseScreen extends StatefulWidget {
   const newExpenseScreen({super.key, required this.title});
@@ -59,6 +59,7 @@ class _signUp extends State<newExpenseScreen> {
                 onPressed: () => _pickDate(context),
                 child: Text('Pick a Date'),
               ),
+              Text("choose category"),
 
               DropdownMenu<String>(
                 initialSelection: list.first,
@@ -79,7 +80,14 @@ class _signUp extends State<newExpenseScreen> {
                   hintText: 'Enter quantity',
                 ),
               ),
+              ElevatedButton(
+                onPressed: () {
+
+                },
+                child: Text('Add Task '),
+              ),
             ],
+
           ),
         ),
       ),

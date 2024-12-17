@@ -47,7 +47,6 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
 
 
-      backgroundColor: Colors.cyan,
       body: Center(
 
 

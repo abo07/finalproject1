@@ -122,11 +122,6 @@ class _signUp extends State<signUp> {
               Row(
 
                 children: [
-                  const SizedBox(
-                    width: 200.0,
-                  ),
-
-
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
@@ -135,7 +130,7 @@ class _signUp extends State<signUp> {
                       User user2=new User();
                       user2.firstName=_firstName.text;
                       user2.lastName=_LastName.text;
-                      user2.password=_txtEmail.text;
+                      user2.password=_NewPassword.text;
 
                       insertUser(user2);
                     },
