@@ -15,6 +15,7 @@ class newExpenseScreen extends StatefulWidget {
 class _signUp extends State<newExpenseScreen> {
   DateTime? _selectedDate;
 
+
   get selectedItem => null;
 
   // Function to display the date picker
@@ -84,7 +85,7 @@ class _signUp extends State<newExpenseScreen> {
                 onPressed: () {
 
                 },
-                child: Text('Add Task '),
+                child: Text('Add Expense '),
               ),
             ],
 

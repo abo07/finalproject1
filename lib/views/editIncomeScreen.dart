@@ -3,16 +3,16 @@ import '../utils/utils.dart';
 
 const List<String> list = <String>['Home', 'Two', 'Three', 'Four'];
 
-class newExpenseScreen extends StatefulWidget {
-  const newExpenseScreen({super.key, required this.title});
+class newIncomeScreen extends StatefulWidget {
+  const newIncomeScreen({super.key, required this.title});
 
   final String title;
 
   @override
-  State<newExpenseScreen> createState() => _signUp();
+  State<newIncomeScreen> createState() => _signUp();
 }
 
-class _signUp extends State<newExpenseScreen> {
+class _signUp extends State<newIncomeScreen> {
   DateTime? _selectedDate;
 
   get selectedItem => null;
@@ -46,7 +46,7 @@ class _signUp extends State<newExpenseScreen> {
           width: MediaQuery.of(context).size.width,
           child: Column(
             children: <Widget>[
-              Text("Expense date:"),
+              Text("Income date:"),
               Text(
                 _selectedDate == null
                     ? 'No date selected'
