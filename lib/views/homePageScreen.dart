@@ -18,7 +18,7 @@ class Homepagescreen extends StatefulWidget {
 class _Homepagescreen extends State<Homepagescreen> {
   int _selectedIndex = 0;
 
- var total = 2425;
+ var total = 2425;//just an example
 
   @override
   Widget build(BuildContext context) {
