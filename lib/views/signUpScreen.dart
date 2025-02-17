@@ -5,6 +5,11 @@ import 'package:finalproject1/main.dart';
 
 import '../utils/utils.dart';
 
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/APIconfigue.dart';
+
 
 class signUp extends StatefulWidget {
   const signUp({super.key, required this.title});
@@ -49,6 +54,18 @@ class _signUp extends State<signUp> {
 
   @override
   Widget build(BuildContext context) {
+
+    Future insertUser(BuildContext context, User user) async {
+
+      //   SharedPreferences prefs = await SharedPreferences.getInstance();
+      //  String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
+      var url = "users/insertUser.php?firstName=" + user.firstName + "&lastName=" + user.lastName + "&Email="+ user.Email +"&userName=" + user.userName + "&password="+user.password;
+      final response = await http.get(Uri.parse(serverPath + url));
+      // print(serverPath + url);
+      setState(() { });
+      Navigator.pop(context);
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -132,7 +149,7 @@ class _signUp extends State<signUp> {
                       user2.lastName=_LastName.text;
                       user2.password=_NewPassword.text;
 
-                      insertUser(user2);
+                      insertUser(context,user2);
                     },
 
                     child: Text('create account'),
