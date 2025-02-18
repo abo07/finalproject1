@@ -1,12 +1,12 @@
+import 'dart:io';
+
 import 'package:finalproject1/utils/DB.dart';
 import 'package:finalproject1/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'views/signUpScreen.dart';
 import 'views/homePageScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/APIconfigue.dart';
 
 void main() {
@@ -43,31 +43,23 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _txt1= TextEditingController();
   final TextEditingController _txt2= TextEditingController();
 
+  checkConction() async {
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        // print('connected to internet');// print(result);// return 1;
+      }
+    } on SocketException catch (_) {
+      // print('not connected to internet');// print(result);
+      var uti = new utils();
+      uti.showMyDialog(context, "אין אינטרנט", "האפליקציה דורשת חיבור לאינטרנט, נא להתחבר בבקשה","");
+      return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    Future deleteFuel(BuildContext context, String fuelID) async {
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
-      var url = "fuel/deleteFuel.php?fuelID=" + fuelID + getInfoDeviceSTR!;
-      final response = await http.get(Uri.parse(serverPath + url));
-      // print(serverPath + url);
-      setState(() { });
-      Navigator.pop(context);
-    }
-
-    Future insertUser(BuildContext context, String firstName, String lastName) async {
-
-      //   SharedPreferences prefs = await SharedPreferences.getInstance();
-      //  String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
-      var url = "users/insertUser.php?firstName=" + firstName + "&lastName=" + lastName;
-      final response = await http.get(Uri.parse(serverPath + url));
-      // print(serverPath + url);
-      setState(() { });
-      Navigator.pop(context);
-    }
-
+    checkConction();
 
     return Scaffold(
       appBar: AppBar(

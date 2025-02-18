@@ -2,14 +2,10 @@ import 'package:finalproject1/models/User.dart';
 import 'package:finalproject1/utils/DB.dart';
 import 'package:flutter/material.dart';
 import 'package:finalproject1/main.dart';
-
 import '../utils/utils.dart';
-
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/APIconfigue.dart';
-
 
 class signUp extends StatefulWidget {
   const signUp({super.key, required this.title});
@@ -21,178 +17,211 @@ class signUp extends StatefulWidget {
 }
 
 class _signUp extends State<signUp> {
+  final _firstName = TextEditingController();
+  final _LastName = TextEditingController();
+  final _txtEmail = TextEditingController();
+  final _username = TextEditingController();
+  final _NewPassword = TextEditingController();
+  final _ConfirmPassword = TextEditingController();
+  final _formKey = GlobalKey<FormState>(); // Add form key for validation
 
-  final _firstName=TextEditingController();
-  final _LastName=TextEditingController();
-  final _txtEmail=TextEditingController();
-  final _username=TextEditingController();
-  final _NewPassword=TextEditingController();
-  final _ConfirmPassword=TextEditingController();
 
-  void insertUserFunction()
-  {
 
-    var uti =new utils();
-    if(_firstName!="" && _txtEmail!="" && _username!="" && _NewPassword!="")
-      {
-        var user =new User();
-        user.firstName=_firstName.text;
-        user.Email=_txtEmail.text;
-        user.userName=_username.text;
-        user.password=_NewPassword.text;
-        insertUser(user);
-        uti.showMyDialog(context, "SUCCESS!!", "", "");
-      }
-    else
-      {
-        var uti =new utils();
-        uti.showMyDialog(context, "Reguired", "", "first name and email and username and new password is required");
-
-      }
-  }
 
 
   @override
   Widget build(BuildContext context) {
-
-    Future insertUser(BuildContext context, User user) async {
-
-      //   SharedPreferences prefs = await SharedPreferences.getInstance();
-      //  String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
-      var url = "users/insertUser.php?firstName=" + user.firstName + "&lastName=" + user.lastName + "&Email="+ user.Email +"&userName=" + user.userName + "&password="+user.password;
-      final response = await http.get(Uri.parse(serverPath + url));
-      // print(serverPath + url);
-      setState(() { });
-      Navigator.pop(context);
-    }
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("Sign up"),
+        title: Text("Create Account", style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
       ),
-
-      body: Center(
-        child: Container(
-          alignment: Alignment.center,
-          width: MediaQuery.of(context).size.width,
-          child: Column(
-            children: <Widget>[
-
-              Text("first name:"),
-              TextField(
-                controller: _firstName,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your first name',
-                ),
-              ),
-              Text("last name:"),
-              TextField(
-                controller: _LastName,
-
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your last name',
-                ),
-              ),
-              Text("Email:"),
-              TextField(
-                controller: _txtEmail,
-
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your Email',
-                ),
-              ),
-
-              Text("username"),
-              TextField(
-                controller: _username,
-
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your New username',
-                ),
-              ),
-
-              Text("New Password"),
-              TextField(
-                controller: _NewPassword,
-
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your New Password',
-                ),
-              ),
-
-              Text("Confirm New Password"),
-              TextField(
-                controller: _ConfirmPassword,
-
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your New Password',
-                ),
-              ),
-
-              Row(
-
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
-                      var uti1 = new utils();
-                      uti1.showMyDialog(context, _firstName.text, _LastName.text,_txtEmail.text);
-                      User user2=new User();
-                      user2.firstName=_firstName.text;
-                      user2.lastName=_LastName.text;
-                      user2.password=_NewPassword.text;
-
-                      insertUser(context,user2);
-                    },
-
-                    child: Text('create account'),
-                  ),
-
-
-
-                  const SizedBox(
-                    width: 20.0,
-                  ),
-
-                  TextButton(
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.blue.shade50],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  // Header
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.person_add, size: 64, color: Theme.of(context).primaryColor),
+                        SizedBox(height: 16),
+                        Text(
+                          "Join Now",
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          "Please fill in the information below",
+                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        ),
+                      ],
                     ),
-                    onPressed: () {
-                      User user1=new User();
-                      user1.firstName="Ahmad";
-                      user1.lastName="AboMokh";
-                      user1.password="ahmad3284923";
-                      user1.createdDateTime="21/10/2024";
-                      insertUserFunction();
-
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
-                      },
-                    child: Text('Already have an account ? login.'),
                   ),
+                  SizedBox(height: 32),
 
-                  const SizedBox(
-                    width: 20.0,
+                  // Form fields with improved styling
+                  _buildInputField(_firstName, "First Name", Icons.person,
+                      validator: (value) => value.isEmpty ? "First name is required" : null),
+                  SizedBox(height: 16),
+
+                  _buildInputField(_LastName, "Last Name", Icons.person_outline),
+                  SizedBox(height: 16),
+
+                  _buildInputField(_txtEmail, "Email", Icons.email,
+                      validator: (value) => value.isEmpty ? "Email is required" : null,
+                      keyboardType: TextInputType.emailAddress),
+                  SizedBox(height: 16),
+
+                  _buildInputField(_username, "Username", Icons.account_circle,
+                      validator: (value) => value.isEmpty ? "Username is required" : null),
+                  SizedBox(height: 16),
+
+                  _buildInputField(_NewPassword, "Password", Icons.lock,
+                      validator: (value) => value.isEmpty ? "Password is required" : null,
+                      isPassword: true),
+                  SizedBox(height: 16),
+
+                  _buildInputField(_ConfirmPassword, "Confirm Password", Icons.lock_outline,
+                      validator: (value) => value != _NewPassword.text ? "Passwords don't match" : null,
+                      isPassword: true),
+                  SizedBox(height: 32),
+
+                  // Buttons
+                  Center(
+                    child: Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              // Form is valid, proceed with account creation
+                              User user2 = new User();
+                              user2.firstName = _firstName.text;
+                              user2.lastName = _LastName.text;
+                              user2.Email = _txtEmail.text;
+                              user2.userName = _username.text;
+                              user2.password = _NewPassword.text;
+
+                              insertUser(user2);
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+
+                            padding: EdgeInsets.symmetric(horizontal: 48, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          child: Text('CREATE ACCOUNT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        ),
+                        SizedBox(height: 24),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+                          },
+                          child: RichText(
+                            text: TextSpan(
+                              text: 'Already have an account? ',
+                              style: TextStyle(color: Colors.black87),
+                              children: [
+                                TextSpan(
+                                  text: 'Login',
+                                  style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-
-
-
                 ],
               ),
-
-            ],
-
-
+            ),
           ),
         ),
       ),
     );
   }
+
+  // Helper method to build consistent input fields
+  Widget _buildInputField(
+      TextEditingController controller,
+      String label,
+      IconData icon, {
+        bool isPassword = false,
+        String? Function(String)? validator,
+        TextInputType keyboardType = TextInputType.text,
+      }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: EdgeInsets.symmetric(vertical: 16),
+          ),
+          obscureText: isPassword,
+          validator: validator != null ? (value) => validator(value ?? "") : null,
+          keyboardType: keyboardType,
+        ),
+      ],
+    );
+  }
+
+  Future insertUser(User user) async {
+    var url = "users/insertUser.php?firstName=" + user.firstName +
+        "&lastName=" + user.lastName +
+        "&Email=" + user.Email +
+        "&userName=" + user.userName +
+        "&password=" + user.password;
+    final response = await http.get(Uri.parse(serverPath + url));
+    print("myLink:" + serverPath + url);
+    Navigator.pop(context);
+
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+
+  }
 }
+

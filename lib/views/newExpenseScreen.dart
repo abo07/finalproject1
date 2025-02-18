@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import this for TextInputFormatter
 import '../utils/utils.dart';
 
 const List<String> list = <String>['Housing', 'Transportation', 'Food', 'Health & Insurance','Debt & Loans','Savings & Investments','Gifts & Donations'];
@@ -14,7 +15,7 @@ class newExpenseScreen extends StatefulWidget {
 
 class _signUp extends State<newExpenseScreen> {
   DateTime? _selectedDate;
-
+  TextEditingController quantityController = TextEditingController();
 
   get selectedItem => null;
 
@@ -35,6 +36,13 @@ class _signUp extends State<newExpenseScreen> {
   }
 
   @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed
+    quantityController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -52,7 +60,7 @@ class _signUp extends State<newExpenseScreen> {
                 _selectedDate == null
                     ? 'No date selected'
                     : 'Selected Date: ${_selectedDate!.toLocal()}'
-                        .split(' ')[0],
+                    .split(' ')[0],
                 style: TextStyle(fontSize: 20),
               ),
               SizedBox(height: 20),
@@ -70,25 +78,40 @@ class _signUp extends State<newExpenseScreen> {
                   });
                 },
                 dropdownMenuEntries:
-                    list.map<DropdownMenuEntry<String>>((String value) {
+                list.map<DropdownMenuEntry<String>>((String value) {
                   return DropdownMenuEntry<String>(value: value, label: value);
                 }).toList(),
               ),
               Text(" quantity:"),
               TextField(
+                controller: quantityController,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter quantity',
                 ),
+                keyboardType: TextInputType.number, // Set keyboard to numeric
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly, // Only accept digits
+                  // Alternatively, use this for decimal numbers:
+                  // FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
               ),
               ElevatedButton(
                 onPressed: () {
-
+                  // Now you can safely parse the quantity as a number
+                  double? quantity = double.tryParse(quantityController.text);
+                  if (quantity != null) {
+                    // Add your logic here
+                  } else {
+                    // Show error that the input is not a valid number
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please enter a valid number')),
+                    );
+                  }
                 },
                 child: Text('Add Expense '),
               ),
             ],
-
           ),
         ),
       ),
