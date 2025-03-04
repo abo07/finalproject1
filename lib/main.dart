@@ -53,6 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
       var uti = new utils();
       uti.showMyDialog(context, "אין אינטרנט", "האפליקציה דורשת חיבור לאינטרנט, נא להתחבר בבקשה","");
       return;
+
     }
   }
 
