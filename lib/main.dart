@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:finalproject1/utils/DB.dart';
 import 'package:finalproject1/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'models/CheckLogin.dart';
 import 'views/signUpScreen.dart';
 import 'views/homePageScreen.dart';
 import 'package:flutter/cupertino.dart';
@@ -39,8 +42,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  final TextEditingController _txt1= TextEditingController();
-  final TextEditingController _txt2= TextEditingController();
+  final TextEditingController _txtUserName= TextEditingController();
+  final TextEditingController _txtPassword= TextEditingController();
+
 
   checkConction() async {
     try {
@@ -80,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
               Text("username"),
               TextField(
-                controller: _txt1,
+                controller: _txtUserName,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your  username',
@@ -88,9 +92,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
 
 
-              Text("Password ${_txt1.text}"),
+              Text("Password ${_txtPassword.text}"),
               TextField(
-                controller: _txt2,
+                controller: _txtPassword,
                 decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Enter your  Password',
@@ -123,9 +127,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
                     ),
                     onPressed: () {
+                      checkLogin();
+                      /*
                        Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
                       var uti = new utils();
                       uti.showMyDialog(context, _txt1.text, _txt2.text,'ahmad');
+                       */
                     },
                     child: Text('login'),
                   ),
@@ -142,4 +149,34 @@ class _MyHomePageState extends State<MyHomePage> {
 
     );
   }
+
+
+  Future checkLogin() async {
+    var url = "checkLogin/checkLogin.php?userName=" + _txtUserName.text +
+        "&password=" + _txtPassword.text;
+    final response = await http.get(Uri.parse(serverPath + url));
+    print("myLink:" + serverPath + url);
+    Navigator.pop(context);
+
+    if(checkLoginModel.fromJson(jsonDecode(response.body)).userID == "0")
+    {
+      // return 'ת.ז ו/או הסיסמה שגויים';
+      var uti = new utils();
+      uti.showMyDialog(context, "", '', 'ת.ז ו/או הסיסמה שגויים');
+    }
+    else
+    {
+      // print("SharedPreferences 1");
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userID', checkLoginModel.fromJson(jsonDecode(response.body)).userID!);
+      await prefs.setString('fullName', checkLoginModel.fromJson(jsonDecode(response.body)).fullName!);
+      Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
+
+      // return null;
+    }
+
+    // Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+
+  }
+
 }
