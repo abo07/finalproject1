@@ -7,207 +7,223 @@ import '../utils/APIconfigue.dart';
 import 'newExpenseScreen.dart';
 import 'package:http/http.dart' as http;
 
+// Expense Screen with correct property mappings
+class ExpenseScreen extends StatefulWidget {
+  @override
+  _ExpenseScreenState createState() => _ExpenseScreenState();
+}
 
-
-
-// Expense Screen
-class ExpenseScreen extends StatelessWidget {
-
-
-  Future getMyLocations() async {
-
-    var url = "expenses/getExpenses.php";
-    final response = await http.get(Uri.parse(serverPath + url));
-    print(serverPath + url);
-    List<Expense> arr = [];
-
-    for(Map<String, dynamic> i in json.decode(response.body)){
-      arr.add(Expense.fromJson(i));
-    }
-
-    return arr;
-  }
-
-
+class _ExpenseScreenState extends State<ExpenseScreen> {
+  // List to store raw expense data from API
+  List<dynamic> _expenses = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   @override
+  void initState() {
+    super.initState();
+    // Fetch expenses when screen initializes
+    fetchExpenses();
+  }
 
+  // Fetch expenses directly as JSON to avoid model mapping issues
+  Future<void> fetchExpenses() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      var url = "expenses/getExpenses.php";
+      final response = await http.get(Uri.parse(serverPath + url));
+
+      if (response.statusCode == 200) {
+        // Print response for debugging
+        print("API Response: ${response.body}");
+
+        if (response.body.isNotEmpty) {
+          // Parse JSON directly
+          final jsonData = json.decode(response.body);
+          setState(() {
+            _expenses = jsonData;
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _expenses = [];
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load expenses. Status: ${response.statusCode}';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
+      });
+      print("Exception while fetching expenses: $e");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-    title: Text("Edit profile"),
-    ),
+    // Create formatters for currency and dates
+    final formatter = NumberFormat.currency(symbol: '\$');
+    final dateFormatter = DateFormat('yyyy-MM-dd'); // Format based on your data
 
-    body: FutureBuilder(
-      future: getMyLocations(),
-      builder: (context, projectSnap) {
-        if (projectSnap.hasData) {
-          if (projectSnap.data.length == 0)
-          {
-            return SizedBox(
-              height: MediaQuery.of(context).size.height * 2,
-              child: Align(
-                  alignment: Alignment.center,
-                  child: Text('אין תוצאות', style: TextStyle(fontSize: 23, color: Colors.black))
-              ),
-            );
-          }
-          else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
+    return RefreshIndicator(
+      onRefresh: fetchExpenses,
+      child: _isLoading
+          ? Center(child: CircularProgressIndicator(color: Colors.red))
+          : _errorMessage.isNotEmpty
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Error loading expenses',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Text(_errorMessage),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: fetchExpenses,
+              child: Text('Retry'),
+            ),
+          ],
+        ),
+      )
+          : _expenses.isEmpty
+          ? Center(
+        child: Text(
+          'No expenses available',
+          style: TextStyle(fontSize: 23, color: Colors.black),
+        ),
+      )
+          : Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Your Expenses',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _expenses.length,
+              itemBuilder: (context, index) {
+                // Get the expense at this index
+                final expense = _expenses[index];
 
+                // Format the date if it exists
+                String formattedDate = 'No date';
+                try {
+                  if (expense['expenseDate'] != null) {
+                    final date = dateFormatter.parse(expense['expenseDate']);
+                    formattedDate = DateFormat('MMM d, yyyy').format(date);
+                  }
+                } catch (e) {
+                  formattedDate = expense['expenseDate'] ?? 'Unknown date';
+                  print("Date parsing error: $e");
+                }
 
-                Expanded(
-                    child:ListView.builder(
-                      itemCount: projectSnap.data.length,
-                      itemBuilder: (context, index) {
-                        Expense project = projectSnap.data[index];
+                // Format the amount if it exists
+                String formattedAmount = 'N/A';
+                try {
+                  if (expense['amount'] != null) {
+                    final amount = double.tryParse(expense['amount'].toString()) ?? 0.0;
+                    formattedAmount = formatter.format(amount);
+                  }
+                } catch (e) {
+                  formattedAmount = expense['amount']?.toString() ?? 'N/A';
+                  print("Amount parsing error: $e");
+                }
 
-                        return Card(
-                            child: ListTile(
-                              onTap: () {
-
-
-                              },
-                              title: Text(project.expenseDate!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),), // Icon(Icons.timer),
-                              // subtitle: Text("[" + project.ariveHour! + "-" + project.exitHour! + "]" + "\n" + project.comments!, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),),
-                              isThreeLine: false,
-                            ));
-                      },
-                    )),
-              ],
-            );
-          }
-        }
-        else if (projectSnap.hasError)
-        {
-          print(projectSnap.error);
-          return  Center(child: Text('שגיאה, נסה שוב', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)));
-        }
-        return Center(child: new CircularProgressIndicator(color: Colors.red,));
-      },
-    ),
-
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  elevation: 2,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(16),
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Date
+                        Expanded(
+                          child: Text(
+                            formattedDate,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        // Amount
+                        Text(
+                          formattedAmount,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: expense['notes'] != null && expense['notes'].toString().isNotEmpty
+                        ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 8),
+                        Text(
+                          expense['notes'],
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ],
+                    )
+                        : null,
+                    onTap: () {
+                      // Show details in a dialog
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text('Expense Details'),
+                          content: SingleChildScrollView(
+                            child: ListBody(
+                              children: [
+                                Text('Date: $formattedDate'),
+                                Text('Amount: $formattedAmount'),
+                                if (expense['notes'] != null)
+                                  Text('Notes: ${expense['notes']}'),
+                                Text('ID: ${expense['expenseID']}'),
+                                Text('Category ID: ${expense['catogeryID']}'),
+                              ],
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text('Close'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
-
-    // Sample expense data
-    /*
-    final List<Expense> expenses = [
-      Expense(
-        id: '1',
-        title: 'Groceries',
-        amount: 45.99,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      Expense(
-        id: '2',
-        title: 'Movie Tickets',
-        amount: 28.50,
-        date: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-      Expense(
-        id: '3',
-        title: 'Gas',
-        amount: 35.00,
-        date: DateTime.now().subtract(const Duration(days: 5)),
-      ),
-      Expense(
-        id: '4',
-        title: 'Dinner',
-        amount: 85.75,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ];
-     */
-/*
-    final formatter = NumberFormat.currency(symbol: '\$');
-    final dateFormatter = DateFormat.yMd();
-
-    return Column(
-      children: [
-        const SizedBox(height: 10),
-        const Text(
-          'Your Expenses',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: expenses.isEmpty
-              ? const Center(
-            child: Text(
-              'No Expenses Available',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-          )
-              : ListView.builder(
-            itemCount: expenses.length,
-            itemBuilder: (context, index) {
-              final expense = expenses[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            expense.title,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            dateFormatter.format(expense.date),
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        formatter.format(expense.amount),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
- */
-    /*
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => newExpenseScreen(title: 'New Expense')),
-              );
-            },
-            child: const Text('Add New Expense'),
-            style: ElevatedButton.styleFrom(
-              minimumSize: Size(double.infinity, 50),
-            ),
-          ),
-        ),
-
-     */
-      // ],
