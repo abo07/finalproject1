@@ -14,7 +14,7 @@ class _incomeScreenState extends State<incomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text("This is the Income Screen: ${widget.title}"),
+      child: Text("This is the Income Screen6: ${widget.title}"),
     );
   }
 }
