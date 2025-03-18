@@ -156,7 +156,8 @@ class _MyHomePageState extends State<MyHomePage> {
         "&password=" + _txtPassword.text;
     final response = await http.get(Uri.parse(serverPath + url));
     print("myLink:" + serverPath + url);
-    Navigator.pop(context);
+    //Navigator.pop(context);
+    Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: '',)));
 
     if(checkLoginModel.fromJson(jsonDecode(response.body)).userID == "0")
     {

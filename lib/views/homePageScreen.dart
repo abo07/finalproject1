@@ -114,7 +114,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
       case 1:
         return ExpenseScreen(); // Expense Screen
       case 2:
-        return incomeScreen(title: 'Income'); // Income Screen
+        return IncomeScreen(); // Income Screen - Fixed casing from incomeScreen to IncomeScreen
       case 3:
         return editProfile(title: 'Edit Profile'); // Profile Screen
       default:

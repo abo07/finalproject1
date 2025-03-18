@@ -202,7 +202,7 @@ class _signUp extends State<signUp> {
             fillColor: Colors.white,
             contentPadding: EdgeInsets.symmetric(vertical: 16),
           ),
-          obscureText: isPassword,
+          obscureText: isPassword  ,
           validator: validator != null ? (value) => validator(value ?? "") : null,
           keyboardType: keyboardType,
         ),
