@@ -1,7 +1,7 @@
 
 
 class checkLoginModel {
-  String? userID;
+  int? userID;
   String? fullName;
 
 

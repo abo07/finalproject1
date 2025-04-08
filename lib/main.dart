@@ -92,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
 
 
-              Text("Password ${_txtPassword.text}"),
+              Text("Password"),
               TextField(
                 controller: _txtPassword,
                 decoration: InputDecoration(
@@ -157,20 +157,25 @@ class _MyHomePageState extends State<MyHomePage> {
     final response = await http.get(Uri.parse(serverPath + url));
     print("myLink:" + serverPath + url);
     //Navigator.pop(context);
-    Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: '',)));
-
+    print("fff");
     if(checkLoginModel.fromJson(jsonDecode(response.body)).userID == "0")
     {
       // return 'ת.ז ו/או הסיסמה שגויים';
       var uti = new utils();
       uti.showMyDialog(context, "", '', 'ת.ז ו/או הסיסמה שגויים');
+
     }
     else
     {
       // print("SharedPreferences 1");
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('userID', checkLoginModel.fromJson(jsonDecode(response.body)).userID!);
+      print("1");
+      await prefs.setInt('userID', checkLoginModel.fromJson(jsonDecode(response.body)).userID!);
+      print("1");
+
       await prefs.setString('fullName', checkLoginModel.fromJson(jsonDecode(response.body)).fullName!);
+      print("1");
+
       Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
 
       // return null;
