@@ -48,9 +48,9 @@ class _HomepagescreenState extends State<Homepagescreen> {
               child: FloatingActionButton(
                 heroTag: "btnExpense", // Unique tag to prevent hero animation conflicts
                 onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => newExpenseScreen(title: 'Add Expense'),
-                  ));
+                  // Navigator.push(context, MaterialPageRoute(
+                    // builder: (context) => newExpenseScreen(title: 'Add Expense'),
+                  // ));
                 },
                 child: Icon(Icons.money_off),
                 backgroundColor: Colors.redAccent,
