@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
 
 const List<String> categories = <String>['Housing', 'Transportation', 'Food', 'Health & Insurance', 'Debt & Loans', 'Savings & Investments', 'Gifts & Donations'];
@@ -52,116 +53,51 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
   }
 
 
-  $amount = insertedStr($_GET['amount']);
-  $category = insertedStr($_GET['category']);
-  $notes = insertedStr($_GET['notes']);
-  $date = insertedStr($_GET['date']);
-  $userID = insertedStr($_GET['userID']);
 
+  Future<void> insertExpense() async {
+  // Format date for database (YYYY-MM-DD)
+  String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
 
+  // Build the URL with all the data
+  var url = serverPath + "expenses/insertExpense.php?amount=" + amountController.text +
+  "&category=" + categoryController.text +
+  "&notes=" + notesController.text +
+  "&date=" + formattedDate +
+  "&userID=" + widget.userId.toString();
 
-  Future insertExpense(Expense expense) async {
-    var url = "expenses/insertExpense.php?amount=" + expense.expenseDate +
-        "&category=" + expense.category +
-        "&notes=" + expense.notes +
-        "&date=" + expense.expenseDate +
-        "&password=" + expense.password;
-    final response = await http.get(Uri.parse(serverPath + url));
-    print("myLink:" + serverPath + url);
-    Navigator.pop(context);
+  // Send the request to the server
+  final response = await http.get(Uri.parse(url));
+  print("Connecting to: " + url);
 
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
-
+  // Go back to previous screen
+  Navigator.pop(context);
   }
 
 
 
-  // Function to send expense data to PHP backend
   Future<void> _saveExpense() async {
-    // Check if all required fields are filled
-    if (_selectedDate == null ||
-        amountController.text.isEmpty ||
-        categoryController.text.isEmpty) {
+    // Check if required fields are filled
+    if (_selectedDate == null || amountController.text.isEmpty || categoryController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields')),
       );
       return;
     }
 
-    // Parse amount from text field
-    double? amount = double.tryParse(amountController.text);
-    if (amount == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount')),
-      );
-      return;
-    }
-
-    // Format date for database (YYYY-MM-DD)
-    String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
-
-    // Get category ID from the selected category
-    int categoryId = categoryIds[categoryController.text] ?? 1;
-
+    // Show loading spinner
     setState(() {
-      _isLoading = true; // Show loading indicator
+      _isLoading = true;
     });
 
-    try {
-      // URL of your PHP backend
-      var url = Uri.parse('http://your-website.com/path/to/save_expense.php');
+    // Call the function to send data to PHP
+    await insertExpense();
 
-      // Prepare data to send
-      var response = await http.post(
-        url,
-        body: {
-          'expense_date': formattedDate,
-          'amount': amount.toString(),
-          'notes': notesController.text,
-          'category_id': categoryId.toString(),
-          'user_id': widget.userId.toString(),
-        },
-      );
-
-      // Handle response
-      var data = json.decode(response.body);
-
-      setState(() {
-        _isLoading = false; // Hide loading indicator
-      });
-
-      if (data['result'] == '1') {
-        // Success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expense added successfully!')),
-        );
-
-        // Clear form fields
-        amountController.clear();
-        notesController.clear();
-        setState(() {
-          _selectedDate = DateTime.now();
-        });
-
-        // Go back to previous screen after successful save
-        Navigator.pop(context, true);
-      } else {
-        // Error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to add expense. Please try again.')),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false; // Hide loading indicator
-      });
-
-      // Error message for exceptions
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
-    }
+    // Hide loading spinner
+    setState(() {
+      _isLoading = false;
+    });
   }
+
 
   @override
   void initState() {
