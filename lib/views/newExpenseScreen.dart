@@ -19,10 +19,9 @@ const Map<String, int> categoryIds = {
 };
 
 class newExpenseScreen extends StatefulWidget {
-  const newExpenseScreen({super.key, required this.title, required this.userId});
+  const newExpenseScreen({super.key, required this.title});
 
   final String title;
-  final int userId; // Add user ID as a parameter
 
   @override
   State<newExpenseScreen> createState() => _newExpenseScreenState();
@@ -62,8 +61,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
   var url = serverPath + "expenses/insertExpense.php?amount=" + amountController.text +
   "&category=" + categoryController.text +
   "&notes=" + notesController.text +
-  "&date=" + formattedDate +
-  "&userID=" + widget.userId.toString();
+  "&date=" + formattedDate ;
 
   // Send the request to the server
   final response = await http.get(Uri.parse(url));
