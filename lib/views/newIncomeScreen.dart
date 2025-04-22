@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
 
-const List<String> list = <String>['job salary', 'side job', 'gifts', 'buisness'];
+const List<String> categories = <String>['job salary', 'side job', 'gifts', 'buisness'];
+// Map category names to IDs (assuming your database uses numeric IDs)
+const Map<String, int> categoryIds = {
+  'job salary': 1,
+  'side job': 2,
+  'gifts': 3,
+  'buisness': 4
+};
 
 class newIncomeScreen extends StatefulWidget {
   const newIncomeScreen({super.key, required this.title});
@@ -9,22 +19,24 @@ class newIncomeScreen extends StatefulWidget {
   final String title;
 
   @override
-  State<newIncomeScreen> createState() => _signUp();
+  State<newIncomeScreen> createState() => _newIncomeScreenState();
 }
 
-class _signUp extends State<newIncomeScreen> {
-  DateTime? _selectedDate;
+class _newIncomeScreenState extends State<newIncomeScreen> {
 
-
-  get selectedItem => null;
+  DateTime? _selectedDate = DateTime.now(); // Default to today
+  TextEditingController amountController = TextEditingController();
+  TextEditingController categoryController = TextEditingController();
+  TextEditingController notesController = TextEditingController();
+  bool _isLoading = false; // Add a loading state
 
   // Function to display the date picker
   Future<void> _pickDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(), // Default to the current date
-      firstDate: DateTime(2000), // Earliest selectable date
-      lastDate: DateTime(2100), // Latest selectable date
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
     );
 
     if (pickedDate != null && pickedDate != _selectedDate) {
@@ -34,62 +46,161 @@ class _signUp extends State<newIncomeScreen> {
     }
   }
 
+  Future<void> insertIncome() async {
+    // Format date for database (YYYY-MM-DD)
+    String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
+
+    // Get the category ID
+    int categoryID = categoryIds[categoryController.text] ?? 1;
+
+    // Build the URL with all the data - matching your PHP parameters
+    var url = serverPath + "incomes/insertIncome.php?amount=" + amountController.text +
+        "&categoryID=" + categoryID.toString() +
+        "&notes=" + notesController.text +
+        "&date=" + formattedDate +
+        "&userID=1"; // Fixed userID for now
+
+    // Send the request to the server
+    final response = await http.get(Uri.parse(url));
+    print("Connecting to: " + url);
+    print("Connecting to: $url");
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
+    // Go back to previous screen
+    Navigator.pop(context);
+  }
+
+  Future<void> _saveIncome() async {
+    // Check if required fields are filled
+    if (_selectedDate == null || amountController.text.isEmpty || categoryController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+
+    // Show loading spinner
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Call the function to send data to PHP
+    await insertIncome();
+
+    // Hide loading spinner
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    categoryController.text = categories.first; // Set default category
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose();
+    categoryController.dispose();
+    notesController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("new Income"),
+        title: const Text("New Income"),
       ),
-      body: Center(
-        child: Container(
-          alignment: Alignment.center,
-          width: MediaQuery.of(context).size.width,
-          child: Column(
-            children: <Widget>[
-              Text("Income date:"),
-              Text(
-                _selectedDate == null
-                    ? 'No date selected'
-                    : 'Selected Date: ${_selectedDate!.toLocal()}'
-                    .split(' ')[0],
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => _pickDate(context),
-                child: Text('Pick a Date'),
-              ),
-              Text("choose category"),
-
-              DropdownMenu<String>(
-                initialSelection: list.first,
-                onSelected: (String? value) {
-                  setState(() {
-                    var dropdownValue = value!;
-                  });
-                },
-                dropdownMenuEntries:
-                list.map<DropdownMenuEntry<String>>((String value) {
-                  return DropdownMenuEntry<String>(value: value, label: value);
-                }).toList(),
-              ),
-              Text(" quantity:"),
-              TextField(
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter quantity',
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Text("Income date:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  _selectedDate == null
+                      ? 'No date selected'
+                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
+                  style: const TextStyle(fontSize: 16),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: () {
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: () => _pickDate(context),
+                  child: const Text('Change Date'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-                },
-                child: Text('Add Income '),
-              ),
-            ],
+            const Text("Choose category:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            DropdownMenu<String>(
+              width: MediaQuery.of(context).size.width - 32, // Full width minus padding
+              initialSelection: categories.first,
+              controller: categoryController,
+              onSelected: (String? value) {
+                if (value != null) {
+                  categoryController.text = value;
+                }
+              },
+              dropdownMenuEntries: categories.map((String value) {
+                return DropdownMenuEntry<String>(value: value, label: value);
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
 
-          ),
+            const Text("Amount:", style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: amountController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter amount',
+                prefixText: '\$',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                // Allow decimal numbers for currency
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            const Text("Notes:", style: TextStyle(fontWeight: FontWeight.bold)),
+
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: notesController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter notes (optional)',
+              ),
+              maxLines: 3, // Allow multiple lines for notes
+              keyboardType: TextInputType.text, // Changed from number to text
+            ),
+
+            const SizedBox(height: 32),
+
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                ),
+                onPressed: _saveIncome,
+                child: const Text('Add Income', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+          ],
         ),
       ),
     );
