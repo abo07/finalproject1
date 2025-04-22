@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert'; // Added for URL encoding
 import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
 
@@ -29,6 +30,7 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
   TextEditingController categoryController = TextEditingController();
   TextEditingController notesController = TextEditingController();
   bool _isLoading = false; // Add a loading state
+  String responseMessage = ""; // For debugging
 
   // Function to display the date picker
   Future<void> _pickDate(BuildContext context) async {
@@ -47,28 +49,77 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
   }
 
   Future<void> insertIncome() async {
-    // Format date for database (YYYY-MM-DD)
-    String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
+    try {
+      // Format date for database (YYYY-MM-DD)
+      String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
 
-    // Get the category ID
-    int categoryID = categoryIds[categoryController.text] ?? 1;
+      // Encode notes and category to handle special characters
+      String encodedNotes = Uri.encodeComponent(notesController.text);
+      String encodedCategory = Uri.encodeComponent(categoryController.text);
 
-    // Build the URL with all the data - matching your PHP parameters
-    var url = serverPath + "incomes/insertIncome.php?amount=" + amountController.text +
-        "&categoryID=" + categoryID.toString() +
-        "&notes=" + notesController.text +
-        "&date=" + formattedDate +
-        "&userID=1"; // Fixed userID for now
+      // Build the URL with all the data - exactly like the expense screen
+      var url = serverPath + "incomes/insertIncome.php";
 
-    // Send the request to the server
-    final response = await http.get(Uri.parse(url));
-    print("Connecting to: " + url);
-    print("Connecting to: $url");
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
+      var response = await http.post(
+          Uri.parse(url),
+          body: {
+            'amount': amountController.text,
+            'category': categoryController.text,
+            'notes': notesController.text,
+            'date': formattedDate,
+          }
+      );
 
-    // Go back to previous screen
-    Navigator.pop(context);
+      // Print response for debugging
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      setState(() {
+        responseMessage = "Status: ${response.statusCode}, Body: ${response.body}";
+      });
+
+      // If POST didn't work, try GET as a fallback since your expense screen uses GET
+      if (response.statusCode != 200) {
+        // Build the URL with all the data - exactly like the expense screen
+        url = serverPath + "incomes/insertIncome.php?amount=" + amountController.text +
+            "&category=" + encodedCategory +
+            "&notes=" + encodedNotes +
+            "&date=" + formattedDate;
+
+        response = await http.get(Uri.parse(url));
+        print("Trying GET method. Connecting to: " + url);
+        print("GET Response status: ${response.statusCode}");
+        print("GET Response body: ${response.body}");
+
+        setState(() {
+          responseMessage += "\nFallback GET - Status: ${response.statusCode}, Body: ${response.body}";
+        });
+      }
+
+      // Check response
+      if (response.statusCode == 200) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Income added successfully')),
+        );
+        // Go back to previous screen
+        Navigator.pop(context);
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: Unable to save income')),
+        );
+      }
+    } catch (e) {
+      print("Error inserting income: $e");
+      setState(() {
+        responseMessage = "Error: $e";
+      });
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   Future<void> _saveIncome() async {
@@ -80,9 +131,18 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
       return;
     }
 
+    // Validate amount is a number
+    if (double.tryParse(amountController.text) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
+
     // Show loading spinner
     setState(() {
       _isLoading = true;
+      responseMessage = "";
     });
 
     // Call the function to send data to PHP
@@ -122,6 +182,13 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            // Debug section - will show response info
+            if (responseMessage.isNotEmpty) Container(
+              padding: EdgeInsets.all(8),
+              color: Colors.amber[100],
+              child: Text("Debug: $responseMessage", style: TextStyle(fontSize: 12)),
+            ),
+
             const Text("Income date:", style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Row(
@@ -186,7 +253,7 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
                 hintText: 'Enter notes (optional)',
               ),
               maxLines: 3, // Allow multiple lines for notes
-              keyboardType: TextInputType.text, // Changed from number to text
+              keyboardType: TextInputType.text,
             ),
 
             const SizedBox(height: 32),
