@@ -123,12 +123,12 @@ class _IncomeScreenState extends State<IncomeScreen> {
                 // Format the date if it exists
                 String formattedDate = 'No date';
                 try {
-                  if (income['incomeIDate'] != null) {
-                    final date = dateFormatter.parse(income['incomeIDate']);
+                  if (income['incomeDate'] != null) {
+                    final date = dateFormatter.parse(income['incomeDate']);
                     formattedDate = DateFormat('MMM d, yyyy').format(date);
                   }
                 } catch (e) {
-                  formattedDate = income['incomeIDate'] ?? 'Unknown date';
+                  formattedDate = income['incomeDate'] ?? 'Unknown date';
                   print("Date parsing error: $e");
                 }
 
@@ -201,8 +201,9 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                 Text('Amount: $formattedAmount'),
                                 if (income['notes'] != null)
                                   Text('Notes: ${income['notes']}'),
-                                Text('ID: ${income['incomeIID']}'),
-                                Text('Category ID: ${income['catogeryID']}'),
+                                Text('ID: ${income['incomeID']}'),
+                                Text('Category ID: ${income['categoryID']}'),
+
                               ],
                             ),
                           ),
