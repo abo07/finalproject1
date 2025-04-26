@@ -1,19 +1,18 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/Expense.dart';
 import '../utils/APIconfigue.dart';
 import 'newExpenseScreen.dart';
 import 'package:http/http.dart' as http;
 
-// Expense Screen with correct property mappings
 class ExpenseScreen extends StatefulWidget {
   @override
   _ExpenseScreenState createState() => _ExpenseScreenState();
 }
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
-  // List to store raw expense data from API
   List<dynamic> _expenses = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -21,11 +20,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch expenses when screen initializes
     fetchExpenses();
   }
 
-  // Fetch expenses directly as JSON to avoid model mapping issues
   Future<void> fetchExpenses() async {
     setState(() {
       _isLoading = true;
@@ -37,11 +34,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       final response = await http.get(Uri.parse(serverPath + url));
 
       if (response.statusCode == 200) {
-        // Print response for debugging
         print("API Response: ${response.body}");
 
         if (response.body.isNotEmpty) {
-          // Parse JSON directly
           final jsonData = json.decode(response.body);
           setState(() {
             _expenses = jsonData;
@@ -68,11 +63,23 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     }
   }
 
+  // Simple delete function
+  Future deleteExpense(BuildContext context, String expenseID) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
+    var url = "expenses/deleteExpense.php?expenseID=" + expenseID + getInfoDeviceSTR!;
+    final response = await http.get(Uri.parse(serverPath + url));
+    print(serverPath + url);
+
+    // Remove the Navigator.pop and add fetchExpenses instead
+    fetchExpenses();
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    // Create formatters for currency and dates
     final formatter = NumberFormat.currency(symbol: '\$');
-    final dateFormatter = DateFormat('yyyy-MM-dd'); // Format based on your data
+    final dateFormatter = DateFormat('yyyy-MM-dd');
 
     return RefreshIndicator(
       onRefresh: fetchExpenses,
@@ -118,10 +125,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             child: ListView.builder(
               itemCount: _expenses.length,
               itemBuilder: (context, index) {
-                // Get the expense at this index
                 final expense = _expenses[index];
 
-                // Format the date if it exists
                 String formattedDate = 'No date';
                 try {
                   if (expense['expenseDate'] != null) {
@@ -130,10 +135,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                   }
                 } catch (e) {
                   formattedDate = expense['expenseDate'] ?? 'Unknown date';
-                  print("Date parsing error: $e");
                 }
 
-                // Format the amount if it exists
                 String formattedAmount = 'N/A';
                 try {
                   if (expense['amount'] != null) {
@@ -142,7 +145,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                   }
                 } catch (e) {
                   formattedAmount = expense['amount']?.toString() ?? 'N/A';
-                  print("Amount parsing error: $e");
                 }
 
                 return Card(
@@ -189,6 +191,11 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                       ],
                     )
                         : null,
+                    // Fixed delete button
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => deleteExpense(context, expense['expenseID'].toString()),
+                    ),
                     onTap: () {
                       // Show details in a dialog
                       showDialog(
@@ -221,8 +228,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               },
             ),
           ),
+
         ],
       ),
     );
+
   }
 }

@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../utils/APIconfigue.dart';
 import 'editProfile.dart';
 import 'expenseScreen.dart';
 import 'newExpenseScreen.dart';
 import 'incomeScreen.dart';
 import 'package:finalproject1/views/newIncomeScreen.dart';
+import 'package:http/http.dart' as http;
+
 
 // Main HomePage class with BottomNavigationBar
 class Homepagescreen extends StatefulWidget {
@@ -27,6 +30,25 @@ class _HomepagescreenState extends State<Homepagescreen> {
     'Income',
     'Edit Profile'
   ];
+
+
+
+  Future getReports() async {
+
+    var url = "users/getReports.php";
+    final response = await http.get(Uri.parse(serverPath + url));
+    // print(serverPath + url);
+    List<WorkLogModel> arr = [];
+
+    for(Map<String, dynamic> i in json.decode(response.body)){
+      arr.add(WorkLogModel.fromJson(i));
+    }
+
+    return arr;
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +152,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  var total = 2425; // Example balance
+  var total = 333; // Example balance
   int touchedIndex = -1;
 
   // Sample expense data
@@ -288,11 +310,3 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// Expense Category data class
-class ExpenseCategory {
-  final String name;
-  final double amount;
-  final Color color;
-
-  ExpenseCategory(this.name, this.amount, this.color);
-}
