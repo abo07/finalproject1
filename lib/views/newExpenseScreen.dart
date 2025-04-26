@@ -2,6 +2,7 @@ import 'package:finalproject1/models/Expense.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
@@ -56,12 +57,18 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
   Future<void> insertExpense() async {
   // Format date for database (YYYY-MM-DD)
   String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
+  // Get categoryID from the selected category name
+  int categoryID = categoryIds[categoryController.text] ?? 0;
+
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  var userID = prefs.getInt("userID");
+
 
   // Build the URL with all the data
   var url = serverPath + "expenses/insertExpense.php?amount=" + amountController.text +
-  "&category=" + categoryController.text +
+  "&category=" + categoryID.toString() +
   "&notes=" + notesController.text +
-  "&date=" + formattedDate ;
+  "&date=" + formattedDate + "&userID=" + userID.toString() ;
 
   // Send the request to the server
   final response = await http.get(Uri.parse(url));

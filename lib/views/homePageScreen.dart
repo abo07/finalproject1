@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../models/ExpenseCategory.dart';
 import '../utils/APIconfigue.dart';
 import 'editProfile.dart';
 import 'expenseScreen.dart';
@@ -33,25 +36,14 @@ class _HomepagescreenState extends State<Homepagescreen> {
 
 
 
-  Future getReports() async {
-
-    var url = "users/getReports.php";
-    final response = await http.get(Uri.parse(serverPath + url));
-    // print(serverPath + url);
-    List<WorkLogModel> arr = [];
-
-    for(Map<String, dynamic> i in json.decode(response.body)){
-      arr.add(WorkLogModel.fromJson(i));
-    }
-
-    return arr;
-  }
-
 
 
 
   @override
   Widget build(BuildContext context) {
+
+    // getReports();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -155,6 +147,40 @@ class _HomePageState extends State<HomePage> {
   var total = 333; // Example balance
   int touchedIndex = -1;
 
+
+  Future getReports() async {
+
+    var url = "ExpenseCategory/getReports.php";
+    final response = await http.get(Uri.parse(serverPath + url));
+    print(serverPath + url);
+    List<ExpenseCategory> arr = [];
+
+    for(Map<String, dynamic> i in json.decode(response.body)){
+      arr.add(ExpenseCategory.fromJson(i));
+    }
+
+    return arr;
+  }
+
+
+  // Future getMyLocations() async {
+  //
+  //   var url = "users/getDetailsHours.php";
+  //   final response = await http.get(Uri.parse(serverPath + url));
+  //   // print(serverPath + url);
+  //   List<WorkLogModel> arr = [];
+  //
+  //   for(Map<String, dynamic> i in json.decode(response.body)){
+  //     arr.add(WorkLogModel.fromJson(i));
+  //   }
+  //
+  //   return arr;
+  // }
+  //
+  //
+
+
+
   // Sample expense data
   final List<ExpenseCategory> categories = [
     ExpenseCategory('Food', 450, Colors.red),
@@ -164,6 +190,10 @@ class _HomePageState extends State<HomePage> {
     ExpenseCategory('Bills', 600, Colors.purple),
     ExpenseCategory('Others', 225, Colors.orange),
   ];
+
+   // List<ExpenseCategory> categories = getReports();
+    // categories = getReports();
+
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +300,7 @@ class _HomePageState extends State<HomePage> {
 
       return PieChartSectionData(
         color: categories[i].color,
-        value: categories[i].amount,
+        value: categories[i].amount.toDouble(),
         title: '$percentage%',
         radius: radius,
         titleStyle: TextStyle(

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/APIconfigue.dart';
 import 'package:http/http.dart' as http;
 
@@ -65,6 +66,18 @@ class _IncomeScreenState extends State<IncomeScreen> {
       });
       print("Exception while fetching incomes: $e");
     }
+  }
+
+  Future deleteExpense(BuildContext context, String incomeID) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
+    var url = "expenses/deleteExpense.php?expenseID=" + incomeID;
+    final response = await http.get(Uri.parse(serverPath + url));
+    print(serverPath + url);
+    print(serverPath + url);
+    print(serverPath + url);
+
+    fetchIncomes();
   }
 
   @override

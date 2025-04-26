@@ -30,7 +30,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     });
 
     try {
-      var url = "expenses/getExpenses.php";
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var userID = prefs.getInt("userID");
+
+      var url = "expenses/getExpenses.php?userID=" + userID.toString();
       final response = await http.get(Uri.parse(serverPath + url));
 
       if (response.statusCode == 200) {
@@ -67,11 +70,12 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   Future deleteExpense(BuildContext context, String expenseID) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
-    var url = "expenses/deleteExpense.php?expenseID=" + expenseID + getInfoDeviceSTR!;
+    var url = "expenses/deleteExpense.php?expenseID=" + expenseID;
     final response = await http.get(Uri.parse(serverPath + url));
     print(serverPath + url);
+    print(serverPath + url);
+    print(serverPath + url);
 
-    // Remove the Navigator.pop and add fetchExpenses instead
     fetchExpenses();
   }
 
@@ -196,6 +200,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                       icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () => deleteExpense(context, expense['expenseID'].toString()),
                     ),
+
                     onTap: () {
                       // Show details in a dialog
                       showDialog(

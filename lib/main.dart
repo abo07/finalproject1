@@ -172,10 +172,8 @@ class _MyHomePageState extends State<MyHomePage> {
       print("1");
       await prefs.setInt('userID', checkLoginModel.fromJson(jsonDecode(response.body)).userID!);
       print("1");
-
       await prefs.setString('fullName', checkLoginModel.fromJson(jsonDecode(response.body)).fullName!);
       print("1");
-
       Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
 
       // return null;
