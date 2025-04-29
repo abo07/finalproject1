@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/ExpenseCategory.dart';
 import '../utils/APIconfigue.dart';
-import 'editProfile.dart';
+import 'goalScreen.dart';
 import 'expenseScreen.dart';
 import 'newExpenseScreen.dart';
 import 'incomeScreen.dart';
@@ -24,7 +25,6 @@ class Homepagescreen extends StatefulWidget {
 
 class _HomepagescreenState extends State<Homepagescreen> {
   int _selectedIndex = 0; // Default index (Home)
-  var total = 2425; // Just an example balance
 
   // Define the titles for each tab
   final List<String> _pageTitles = [
@@ -139,13 +139,15 @@ class _HomepagescreenState extends State<Homepagescreen> {
 
 // Home Screen (Main screen with balance and buttons)
 class HomePage extends StatefulWidget {
+
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  var total = 333; // Example balance
+  var total;
   int touchedIndex = -1;
+  List<dynamic> _data = [];
 
 
   Future getReports() async {
@@ -161,6 +163,41 @@ class _HomePageState extends State<HomePage> {
 
     return arr;
   }
+
+  Future<void> fetchData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userID = prefs.getInt("userID");
+    var url = "ExpenseCategory/getReports.php?userID=" + userID.toString();
+    final response = await http.get(Uri.parse(serverPath + url));
+print(serverPath + url);
+    if (response.statusCode == 200) {
+      setState(() {
+        _data = json.decode(response.body);
+      });
+    } else {
+      print('Failed to load data');
+    }
+  }
+
+
+
+
+  Future<void> fetchBalance() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userID = prefs.getInt("userID");
+    var url = "ExpenseCategory/getCurrentBalance.php?userID=" + userID.toString();
+    final response = await http.get(Uri.parse(serverPath + url));
+    print(serverPath + url);
+    if (response.statusCode == 200) {
+      setState(() {
+        total = json.decode(response.body)["balance"];
+      });
+    } else {
+      print('Failed to load data');
+    }
+  }
+
+
 
 
   // Future getMyLocations() async {
@@ -182,14 +219,14 @@ class _HomePageState extends State<HomePage> {
 
 
   // Sample expense data
-  final List<ExpenseCategory> categories = [
-    ExpenseCategory('Food', 450, Colors.red),
-    ExpenseCategory('Transport', 350, Colors.blue),
-    ExpenseCategory('Entertainment', 280, Colors.green),
-    ExpenseCategory('Shopping', 520, Colors.amber),
-    ExpenseCategory('Bills', 600, Colors.purple),
-    ExpenseCategory('Others', 225, Colors.orange),
-  ];
+  // final List<ExpenseCategory> categories = [
+  //   ExpenseCategory('Food', 450, Colors.red),
+  //   ExpenseCategory('Transport', 350, Colors.blue),
+  //   ExpenseCategory('Entertainment', 280, Colors.green),
+  //   ExpenseCategory('Shopping', 520, Colors.amber),
+  //   ExpenseCategory('Bills', 600, Colors.purple),
+  //   ExpenseCategory('Others', 225, Colors.orange),
+  // ];
 
    // List<ExpenseCategory> categories = getReports();
     // categories = getReports();
@@ -197,6 +234,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    fetchData();
+    fetchBalance();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Center(
@@ -242,38 +283,37 @@ class _HomePageState extends State<HomePage> {
                               flex: 2,
                               child: PieChart(
                                 PieChartData(
-                                  pieTouchData: PieTouchData(
-                                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                                      setState(() {
-                                        if (!event.isInterestedForInteractions ||
-                                            pieTouchResponse == null ||
-                                            pieTouchResponse.touchedSection == null) {
-                                          touchedIndex = -1;
-                                          return;
-                                        }
-                                        touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                                      });
-                                    },
-                                  ),
-                                  borderData: FlBorderData(show: false),
+                                  sections: _data.map((item) {
+                                    final value = item['amount'].toDouble();
+                                    final title = item['category'];
+                                    final color = item['color'];
+                                    Color color1 = HexColor(color);
+
+                                    return PieChartSectionData(
+                                      value: value,
+                                      color: color1,
+                                      title: title,
+                                      radius: 80,
+                                      titleStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                                    );
+                                  }).toList(),
                                   sectionsSpace: 2,
                                   centerSpaceRadius: 40,
-                                  sections: generatePieChartSections(),
                                 ),
                               ),
                             ),
                             // Legend with scrollable container
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: generateLegendItems(),
-                                ),
-                              ),
-                            ),
+                            // Expanded(
+                            //   flex: 1,
+                            //   child: Container(
+                            //     padding: EdgeInsets.symmetric(horizontal: 8),
+                            //     child: Column(
+                            //       mainAxisAlignment: MainAxisAlignment.center,
+                            //       crossAxisAlignment: CrossAxisAlignment.start,
+                            //       children: generateLegendItems(),
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),
@@ -290,53 +330,66 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+
   // Generate pie chart sections
-  List<PieChartSectionData> generatePieChartSections() {
-    return List.generate(categories.length, (i) {
-      final isTouched = i == touchedIndex;
-      final double fontSize = isTouched ? 18 : 14;
-      final double radius = isTouched ? 110 : 100;
-      final percentage = (categories[i].amount / total * 100).toStringAsFixed(1);
+  // List<PieChartSectionData> generatePieChartSections() {
+  //   return List.generate(categories.length, (i) {
+  //     final isTouched = i == touchedIndex;
+  //     final double fontSize = isTouched ? 18 : 14;
+  //     final double radius = isTouched ? 110 : 100;
+  //     final percentage = (categories[i].amount / total * 100).toStringAsFixed(1);
+  //
+  //     return PieChartSectionData(
+  //       color: categories[i].color,
+  //       value: categories[i].amount.toDouble(),
+  //       title: '$percentage%',
+  //       radius: radius,
+  //       titleStyle: TextStyle(
+  //         fontSize: fontSize,
+  //         fontWeight: FontWeight.bold,
+  //         color: Colors.white,
+  //       ),
+  //     );
+  //   });
+  // }
 
-      return PieChartSectionData(
-        color: categories[i].color,
-        value: categories[i].amount.toDouble(),
-        title: '$percentage%',
-        radius: radius,
-        titleStyle: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      );
-    });
-  }
-
-  // Generate legend items
-  List<Widget> generateLegendItems() {
-    return categories.map((category) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 14,
-              height: 14,
-              color: category.color,
-            ),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                '${category.name}: \$${category.amount.toStringAsFixed(0)}',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-      );
-    }).toList();
-  }
+  // // Generate legend items
+  // List<Widget> generateLegendItems() {
+  //   return categories.map((category) {
+  //     return Padding(
+  //       padding: const EdgeInsets.symmetric(vertical: 4),
+  //       child: Row(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Container(
+  //             width: 14,
+  //             height: 14,
+  //             color: category.color,
+  //           ),
+  //           SizedBox(width: 8),
+  //           Expanded(
+  //             child: Text(
+  //               '${category.name}: \$${category.amount.toStringAsFixed(0)}',
+  //               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+  //               overflow: TextOverflow.ellipsis,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }).toList();
+  // }
 }
 
+class HexColor extends Color {
+  static int _getColorFromHex(String hexColor) {
+    hexColor = hexColor.toUpperCase().replaceAll("#", "");
+    if (hexColor.length == 6) {
+      hexColor = "FF" + hexColor;
+    }
+    return int.parse(hexColor, radix: 16);
+  }
+
+  HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
+}

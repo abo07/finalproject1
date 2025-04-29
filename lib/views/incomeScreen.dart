@@ -33,7 +33,10 @@ class _IncomeScreenState extends State<IncomeScreen> {
     });
 
     try {
-      var url = "incomes/getIncomes.php";
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var userID = prefs.getInt("userID");
+
+      var url = "incomes/getIncomes.php?userID=" + userID.toString();
       final response = await http.get(Uri.parse(serverPath + url));
 
       if (response.statusCode == 200) {
@@ -71,7 +74,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   Future deleteExpense(BuildContext context, String incomeID) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
-    var url = "expenses/deleteExpense.php?expenseID=" + incomeID;
+    var url = "incomes/deleteIncome.php?incomeID=" + incomeID;
     final response = await http.get(Uri.parse(serverPath + url));
     print(serverPath + url);
     print(serverPath + url);
@@ -201,34 +204,10 @@ class _IncomeScreenState extends State<IncomeScreen> {
                       ],
                     )
                         : null,
-                    onTap: () {
-                      // Show details in a dialog
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text('Income Details'),
-                          content: SingleChildScrollView(
-                            child: ListBody(
-                              children: [
-                                Text('Date: $formattedDate'),
-                                Text('Amount: $formattedAmount'),
-                                if (income['notes'] != null)
-                                  Text('Notes: ${income['notes']}'),
-                                Text('ID: ${income['incomeID']}'),
-                                Text('Category ID: ${income['categoryID']}'),
-
-                              ],
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: Text('Close'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => deleteExpense(context, income['incomeID'].toString()),
+                    ),
                   ),
                 );
               },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'expenseScreen.dart';
 import 'incomeScreen.dart';
-import 'editProfile.dart';
+import 'goalScreen.dart';
 
 class CustomNavigationBar extends StatelessWidget {
   final int selectedIndex;
