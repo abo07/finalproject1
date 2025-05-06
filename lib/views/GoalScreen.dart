@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/APIconfigue.dart';
+import 'package:http/http.dart' as http;
 
 class GoalScreen extends StatefulWidget {
   const GoalScreen({super.key, required this.title});
@@ -10,31 +15,19 @@ class GoalScreen extends StatefulWidget {
 }
 
 class _GoalScreenState extends State<GoalScreen> {
-  // List to store financial goals
-  final List<FinancialGoal> goals = [];
+  List<dynamic> _Goals = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   // Controllers for text fields
   final TextEditingController _goalNameController = TextEditingController();
   final TextEditingController _targetAmountController = TextEditingController();
   final TextEditingController _currentAmountController = TextEditingController();
 
-  // Method to add a new goal
-  void _addGoal() {
-    if (_goalNameController.text.isNotEmpty &&
-        _targetAmountController.text.isNotEmpty) {
-      setState(() {
-        goals.add(FinancialGoal(
-          name: _goalNameController.text,
-          targetAmount: double.parse(_targetAmountController.text),
-          currentAmount: double.parse(_currentAmountController.text.isEmpty ? '0' : _currentAmountController.text),
-        ));
-
-        // Clear the text fields
-        _goalNameController.clear();
-        _targetAmountController.clear();
-        _currentAmountController.clear();
-      });
-    }
+  @override
+  void initState() {
+    super.initState();
+    fetchGoals(); // Load goals when the screen is initialized
   }
 
   // Method to update progress for a goal
@@ -43,6 +36,7 @@ class _GoalScreenState extends State<GoalScreen> {
       context: context,
       builder: (context) {
         final TextEditingController updateController = TextEditingController();
+        updateController.text = _Goals[index]['paid'].toString();
         return AlertDialog(
           title: Text('Update Progress'),
           content: TextField(
@@ -59,11 +53,16 @@ class _GoalScreenState extends State<GoalScreen> {
               child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (updateController.text.isNotEmpty) {
-                  setState(() {
-                    goals[index].currentAmount = double.parse(updateController.text);
-                  });
+                  // Call API to update goal progress
+                  await updateGoalInDatabase(
+                      _Goals[index]['goalID'],
+                      double.parse(updateController.text)
+                  );
+
+                  // Reload goals to reflect changes
+                  fetchGoals();
                   Navigator.of(context).pop();
                 }
               },
@@ -73,6 +72,109 @@ class _GoalScreenState extends State<GoalScreen> {
         );
       },
     );
+  }
+
+  Future<void> updateGoalInDatabase(int goalId, double newAmount) async {
+    // Implementation for updating the goal amount in the database
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userID = prefs.getInt("userID");
+
+    var url = serverPath + "goals/updateGoal.php?goalID=" + goalId.toString() +
+        "&paid=" + newAmount.toString() +
+        "&userID=" + userID.toString();
+
+    print("Updating goal: " + url);
+
+    final response = await http.get(Uri.parse(url));
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+  }
+
+  Future<void> insertGoal() async {
+    if (_goalNameController.text.isEmpty || _targetAmountController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please fill in required fields'))
+      );
+      return;
+    }
+
+    // Format date for database (YYYY-MM-DD)
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userID = prefs.getInt("userID");
+
+    // Build the URL with all the data
+    var url = serverPath + "goals/insertGoal.php?targetAmount=" + _targetAmountController.text +
+        "&goalName=" + _goalNameController.text +
+        "&paid=" + (_currentAmountController.text.isEmpty ? "0" : _currentAmountController.text) +
+        "&userID=" + userID.toString();
+
+    print("Connecting to: " + url);
+
+    // Send the request to the server
+    final response = await http.get(Uri.parse(url));
+
+    // For debugging
+    print("Response status: ${response.statusCode}");
+    print("Response body: ${response.body}");
+
+    // Clear the form
+    _goalNameController.clear();
+    _targetAmountController.clear();
+    _currentAmountController.clear();
+
+    // Reload goals to show the newly added goal
+    fetchGoals();
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Goal added successfully'))
+    );
+  }
+
+  Future<void> fetchGoals() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var userID = prefs.getInt("userID");
+
+      var url = "goals/getGoals.php?userID=" + userID.toString();
+      print(serverPath + url);
+      final response = await http.get(Uri.parse(serverPath + url));
+
+      if (response.statusCode == 200) {
+        // Print response for debugging
+        print("API Response: ${response.body}");
+
+        if (response.body.isNotEmpty) {
+          // Parse JSON directly
+          final jsonData = json.decode(response.body);
+          setState(() {
+            _Goals = jsonData;
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _Goals = [];
+            _isLoading = false;
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load Goals. Status: ${response.statusCode}';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
+      });
+      print("Exception while fetching goals: $e");
+    }
   }
 
   @override
@@ -94,7 +196,11 @@ class _GoalScreenState extends State<GoalScreen> {
         child: Container(
           alignment: Alignment.center,
           width: 800,
-          child: SingleChildScrollView(
+          child: _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : _errorMessage.isNotEmpty
+              ? Center(child: Text(_errorMessage, style: TextStyle(color: Colors.red)))
+              : SingleChildScrollView(
             padding: EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -145,7 +251,7 @@ class _GoalScreenState extends State<GoalScreen> {
                         ),
                         SizedBox(height: 16),
                         ElevatedButton(
-                          onPressed: _addGoal,
+                          onPressed: insertGoal,
                           child: Text('Add Goal'),
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 12),
@@ -169,12 +275,12 @@ class _GoalScreenState extends State<GoalScreen> {
                 SizedBox(height: 8),
 
                 // Display goals or a message if no goals exist
-                goals.isEmpty
+                _Goals.isEmpty
                     ? Center(
                   child: Padding(
                     padding: EdgeInsets.all(32.0),
                     child: Text(
-                        ' No goals yet. Add your first financial goal above!',
+                      'No goals yet. Add your first financial goal above!',
                       style: TextStyle(color: Colors.grey),
                       textAlign: TextAlign.center,
                     ),
@@ -183,10 +289,13 @@ class _GoalScreenState extends State<GoalScreen> {
                     : ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: goals.length,
+                  itemCount: _Goals.length,
                   itemBuilder: (context, index) {
-                    final goal = goals[index];
-                    final progress = goal.currentAmount / goal.targetAmount;
+                    final goal = _Goals[index];
+                    // Convert string values to double for calculation
+                    final double targetAmount = double.parse(goal['targetAmount'].toString());
+                    final double currentAmount = double.parse(goal['paid'].toString());
+                    final double progress = targetAmount > 0 ? (currentAmount / targetAmount) : 0.0;
 
                     return Card(
                       margin: EdgeInsets.only(bottom: 12),
@@ -198,11 +307,14 @@ class _GoalScreenState extends State<GoalScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  goal.name,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                Expanded(
+                                  child: Text(
+                                    goal['goalName'] ?? 'Unnamed Goal',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 IconButton(
@@ -214,7 +326,7 @@ class _GoalScreenState extends State<GoalScreen> {
                             ),
                             SizedBox(height: 6),
                             Text(
-                              '\$${goal.currentAmount.toStringAsFixed(2)} of \$${goal.targetAmount.toStringAsFixed(2)}',
+                              '\$${currentAmount.toStringAsFixed(2)} of \$${targetAmount.toStringAsFixed(2)}',
                               style: TextStyle(color: Colors.grey[700]),
                             ),
                             SizedBox(height: 12),
@@ -247,17 +359,4 @@ class _GoalScreenState extends State<GoalScreen> {
       ),
     );
   }
-}
-
-// Model class for a financial goal
-class FinancialGoal {
-  String name;
-  double targetAmount;
-  double currentAmount;
-
-  FinancialGoal({
-    required this.name,
-    required this.targetAmount,
-    this.currentAmount = 0,
-  });
 }
