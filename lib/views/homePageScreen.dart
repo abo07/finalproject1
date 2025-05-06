@@ -6,7 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/ExpenseCategory.dart';
 import '../utils/APIconfigue.dart';
-import 'goalScreen.dart';
+import 'GoalScreen.dart';
 import 'expenseScreen.dart';
 import 'newExpenseScreen.dart';
 import 'incomeScreen.dart';
@@ -31,7 +31,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
     'Home Page',
     'Expenses',
     'Income',
-    'Edit Profile'
+    'Goal'
   ];
 
 
@@ -112,7 +112,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'Goal',
           ),
         ],
       ),
@@ -130,7 +130,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
       case 2:
         return IncomeScreen(); // Income Screen - Fixed casing from incomeScreen to IncomeScreen
       case 3:
-        return editProfile(title: 'Edit Profile'); // Profile Screen
+        return GoalScreen(title: 'goalScreen'); // Profile Screen
       default:
         return HomePage();
     }

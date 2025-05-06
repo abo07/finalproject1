@@ -66,7 +66,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
 
   // Build the URL with all the data
   var url = serverPath + "expenses/insertExpense.php?amount=" + amountController.text +
-  "&category=" + categoryID.toString() +
+  "&categoryID=" + categoryID.toString() +
   "&notes=" + notesController.text +
   "&date=" + formattedDate + "&userID=" + userID.toString() ;
 

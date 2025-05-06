@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert'; // Added for URL encoding
 import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
@@ -54,6 +55,8 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
 
     // Get categoryID from the selected category name
     int categoryID = categoryIds[categoryController.text] ?? 0;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userID = prefs.getInt("userID");
 
     // URL encode the notes to handle special characters
     String encodedNotes = Uri.encodeComponent(notesController.text);
@@ -62,7 +65,8 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
     var url = serverPath + "incomes/insertIncome.php?amount=" + amountController.text +
         "&categoryID=" + categoryID.toString() + // Changed from category to categoryID
         "&notes=" + encodedNotes +
-        "&date=" + formattedDate;
+        "&date=" + formattedDate +
+    "&userID=" + userID.toString();
 
     print("Connecting to: " + url);
 

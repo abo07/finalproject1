@@ -25,7 +25,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
     fetchIncomes();
   }
 
-  // Fetch incomes from the API
   Future<void> fetchIncomes() async {
     setState(() {
       _isLoading = true;
