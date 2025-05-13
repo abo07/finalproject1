@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,7 +11,6 @@ import 'newExpenseScreen.dart';
 import 'incomeScreen.dart';
 import 'package:finalproject1/views/newIncomeScreen.dart';
 import 'package:http/http.dart' as http;
-
 
 // Main HomePage class with BottomNavigationBar
 class Homepagescreen extends StatefulWidget {
@@ -28,70 +26,31 @@ class _HomepagescreenState extends State<Homepagescreen> {
 
   // Define the titles for each tab
   final List<String> _pageTitles = [
-    'Home Page',
+    'Home',
     'Expenses',
     'Income',
-    'Goal'
+    'Goals'
   ];
-
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
-
-    // getReports();
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(_pageTitles[_selectedIndex]), // Dynamic title based on selected index
+        backgroundColor: Colors.blue,
+        title: Text(
+          _pageTitles[_selectedIndex],
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
-      body: Stack(
-        children: [
-          _getScreenForIndex(_selectedIndex), // Display selected screen based on index
+      body: _getScreenForIndex(_selectedIndex), // Display selected screen based on index
 
-          // Only show FABs when on the HomePage (index 0)
-          if (_selectedIndex == 0) ...[
-            // Floating action button - bottom left (Expense)
-            Positioned(
-              left: 20,
-              bottom: 20,
-              child: FloatingActionButton(
-                heroTag: "btnExpense", // Unique tag to prevent hero animation conflicts
-                onPressed: () {
-                   Navigator.push(context, MaterialPageRoute(
-                     builder: (context) => newExpenseScreen(title: 'Add Expense'),
-                   ));
-                },
-                child: Icon(Icons.money_off),
-                backgroundColor: Colors.redAccent,
-              ),
-            ),
-
-            // Floating action button - bottom right (Income)
-            Positioned(
-              right: 20,
-              bottom: 20,
-              child: FloatingActionButton(
-                heroTag: "btnIncome", // Unique tag to prevent hero animation conflicts
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (context) => newIncomeScreen(title: 'Add Income'),
-                  ));
-                },
-                child: Icon(Icons.attach_money),
-                backgroundColor: Colors.green,
-              ),
-            ),
-          ],
-        ],
-      ),
+      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
         onTap: (index) {
           setState(() {
             _selectedIndex = index; // Update selected index
@@ -108,15 +67,34 @@ class _HomepagescreenState extends State<Homepagescreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.attach_money),
-            label: 'Incomes',
+            label: 'Income',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Goal',
+            icon: Icon(Icons.flag),
+            label: 'Goals',
           ),
         ],
       ),
-      // Main floating action button removed as requested
+      // Add Floating Action Button only when needed
+      floatingActionButton: _selectedIndex == 1 || _selectedIndex == 2 ?
+      FloatingActionButton(
+        backgroundColor: _selectedIndex == 1 ? Colors.red : Colors.green,
+        onPressed: () {
+          if (_selectedIndex == 1) {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) => newExpenseScreen(title: 'Add Expense'),
+            ));
+          } else {
+            Navigator.push(context, MaterialPageRoute(
+              builder: (context) => newIncomeScreen(title: 'Add Income'),
+            ));
+          }
+        },
+        child: Icon(
+          _selectedIndex == 1 ? Icons.remove : Icons.add,
+          color: Colors.white,
+        ),
+      ) : null,
     );
   }
 
@@ -128,258 +106,298 @@ class _HomepagescreenState extends State<Homepagescreen> {
       case 1:
         return ExpenseScreen(); // Expense Screen
       case 2:
-        return IncomeScreen(); // Income Screen - Fixed casing from incomeScreen to IncomeScreen
+        return IncomeScreen(); // Income Screen
       case 3:
-        return GoalScreen(title: 'goalScreen'); // Profile Screen
+        return GoalScreen(title: 'Goals'); // Goal Screen
       default:
         return HomePage();
     }
   }
 }
 
-// Home Screen (Main screen with balance and buttons)
+// Simplified Home Screen
 class HomePage extends StatefulWidget {
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  var total;
-  int touchedIndex = -1;
-  List<dynamic> _data = [];
+  double balance = 0.0;
+  List<dynamic> expenseData = [];
+  bool isLoading = true;
 
-
-  Future getReports() async {
-
-    var url = "ExpenseCategory/getReports.php";
-    final response = await http.get(Uri.parse(serverPath + url));
-    print(serverPath + url);
-    List<ExpenseCategory> arr = [];
-
-    for(Map<String, dynamic> i in json.decode(response.body)){
-      arr.add(ExpenseCategory.fromJson(i));
-    }
-
-    return arr;
+  @override
+  void initState() {
+    super.initState();
+    loadData();
   }
 
-  Future<void> fetchData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userID = prefs.getInt("userID");
-    var url = "ExpenseCategory/getReports.php?userID=" + userID.toString();
-    final response = await http.get(Uri.parse(serverPath + url));
-print(serverPath + url);
-    if (response.statusCode == 200) {
-      setState(() {
-        _data = json.decode(response.body);
-      });
-    } else {
-      print('Failed to load data');
-    }
+  Future<void> loadData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await Future.wait([
+      fetchBalance(),
+      fetchExpenseData()
+    ]);
+
+    setState(() {
+      isLoading = false;
+    });
   }
-
-
-
 
   Future<void> fetchBalance() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userID = prefs.getInt("userID");
-    var url = "ExpenseCategory/getCurrentBalance.php?userID=" + userID.toString();
-    final response = await http.get(Uri.parse(serverPath + url));
-    print(serverPath + url);
-    if (response.statusCode == 200) {
-      setState(() {
-        total = json.decode(response.body)["balance"];
-      });
-    } else {
-      print('Failed to load data');
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var userID = prefs.getInt("userID");
+      var url = "ExpenseCategory/getCurrentBalance.php?userID=$userID";
+      final response = await http.get(Uri.parse(serverPath + url));
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          balance = double.tryParse(data["balance"].toString()) ?? 0.0;
+        });
+      }
+    } catch (e) {
+      print('Error fetching balance: $e');
     }
   }
 
+  Future<void> fetchExpenseData() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var userID = prefs.getInt("userID");
+      var url = "ExpenseCategory/getReports.php?userID=$userID";
+      final response = await http.get(Uri.parse(serverPath + url));
 
-
-
-  // Future getMyLocations() async {
-  //
-  //   var url = "users/getDetailsHours.php";
-  //   final response = await http.get(Uri.parse(serverPath + url));
-  //   // print(serverPath + url);
-  //   List<WorkLogModel> arr = [];
-  //
-  //   for(Map<String, dynamic> i in json.decode(response.body)){
-  //     arr.add(WorkLogModel.fromJson(i));
-  //   }
-  //
-  //   return arr;
-  // }
-  //
-  //
-
-
-
-  // Sample expense data
-  // final List<ExpenseCategory> categories = [
-  //   ExpenseCategory('Food', 450, Colors.red),
-  //   ExpenseCategory('Transport', 350, Colors.blue),
-  //   ExpenseCategory('Entertainment', 280, Colors.green),
-  //   ExpenseCategory('Shopping', 520, Colors.amber),
-  //   ExpenseCategory('Bills', 600, Colors.purple),
-  //   ExpenseCategory('Others', 225, Colors.orange),
-  // ];
-
-   // List<ExpenseCategory> categories = getReports();
-    // categories = getReports();
-
+      if (response.statusCode == 200) {
+        setState(() {
+          expenseData = json.decode(response.body);
+        });
+      }
+    } catch (e) {
+      print('Error fetching expense data: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-
-    fetchData();
-    fetchBalance();
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Center(
-        child: Container(
-          alignment: Alignment.center,
-          constraints: BoxConstraints(maxWidth: 800),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                SizedBox(height: 20),
-                Text(
-                  'Current Balance',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '\$${total}',
-                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.w600, color: Colors.green),
-                ),
-                SizedBox(height: 30),
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Expense Categories',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    return isLoading
+        ? Center(child: CircularProgressIndicator())
+        : RefreshIndicator(
+      onRefresh: loadData,
+      child: SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Balance Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Text(
+                      'Current Balance',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[700],
                       ),
-                      SizedBox(height: 16),
-                      // Pie Chart Container with fixed height
-                      Container(
-                        height: 280,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Pie Chart
-                            Expanded(
-                              flex: 2,
-                              child: PieChart(
-                                PieChartData(
-                                  sections: _data.map((item) {
-                                    final value = item['amount'].toDouble();
-                                    final title = item['category'];
-                                    final color = item['color'];
-                                    Color color1 = HexColor(color);
-
-                                    return PieChartSectionData(
-                                      value: value,
-                                      color: color1,
-                                      title: title,
-                                      radius: 80,
-                                      titleStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
-                                    );
-                                  }).toList(),
-                                  sectionsSpace: 2,
-                                  centerSpaceRadius: 40,
-                                ),
-                              ),
-                            ),
-                            // Legend with scrollable container
-                            // Expanded(
-                            //   flex: 1,
-                            //   child: Container(
-                            //     padding: EdgeInsets.symmetric(horizontal: 8),
-                            //     child: Column(
-                            //       mainAxisAlignment: MainAxisAlignment.center,
-                            //       crossAxisAlignment: CrossAxisAlignment.start,
-                            //       children: generateLegendItems(),
-                            //     ),
-                            //   ),
-                            // ),
-                          ],
-                        ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '\$${balance.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: balance >= 0 ? Colors.green : Colors.red,
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            SizedBox(height: 24),
+
+            // Quick Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildActionButton(
+                  context,
+                  Icons.money_off,
+                  'Expense',
+                  Colors.red[100]!,
+                  Colors.red,
+                      () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => newExpenseScreen(title: 'Add Expense'))
                   ),
                 ),
-
-                SizedBox(height: 70), // Extra space at bottom to avoid FAB overlap
+                _buildActionButton(
+                  context,
+                  Icons.attach_money,
+                  'Income',
+                  Colors.green[100]!,
+                  Colors.green,
+                      () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => newIncomeScreen(title: 'Add Income'))
+                  ),
+                ),
               ],
             ),
-          ),
+
+            SizedBox(height: 24),
+
+            // Chart Section
+            expenseData.isEmpty
+                ? Center(
+              child: Padding(
+                padding: EdgeInsets.all(30),
+                child: Column(
+                  children: [
+                    Icon(Icons.bar_chart, size: 70, color: Colors.grey[400]),
+                    SizedBox(height: 16),
+                    Text(
+                      'No expense data available',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+                : Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Expense Breakdown',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Container(
+                      height: 200,
+                      child: PieChart(
+                        PieChartData(
+                          sections: expenseData.map((item) {
+                            final value = double.tryParse(item['amount'].toString()) ?? 0.0;
+                            final title = item['category'];
+                            final colorStr = item['color'];
+                            final color = HexColor(colorStr);
+
+                            return PieChartSectionData(
+                              value: value,
+                              color: color,
+                              title: '',
+                              radius: 50,
+                            );
+                          }).toList(),
+                          sectionsSpace: 2,
+                          centerSpaceRadius: 30,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Legend
+                    Column(
+                      children: expenseData.map((item) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: HexColor(item['color']),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  item['category'],
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ),
+                              Text(
+                                '\$${double.tryParse(item['amount'].toString())?.toStringAsFixed(2) ?? '0.00'}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-
-
-  // Generate pie chart sections
-  // List<PieChartSectionData> generatePieChartSections() {
-  //   return List.generate(categories.length, (i) {
-  //     final isTouched = i == touchedIndex;
-  //     final double fontSize = isTouched ? 18 : 14;
-  //     final double radius = isTouched ? 110 : 100;
-  //     final percentage = (categories[i].amount / total * 100).toStringAsFixed(1);
-  //
-  //     return PieChartSectionData(
-  //       color: categories[i].color,
-  //       value: categories[i].amount.toDouble(),
-  //       title: '$percentage%',
-  //       radius: radius,
-  //       titleStyle: TextStyle(
-  //         fontSize: fontSize,
-  //         fontWeight: FontWeight.bold,
-  //         color: Colors.white,
-  //       ),
-  //     );
-  //   });
-  // }
-
-  // // Generate legend items
-  // List<Widget> generateLegendItems() {
-  //   return categories.map((category) {
-  //     return Padding(
-  //       padding: const EdgeInsets.symmetric(vertical: 4),
-  //       child: Row(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           Container(
-  //             width: 14,
-  //             height: 14,
-  //             color: category.color,
-  //           ),
-  //           SizedBox(width: 8),
-  //           Expanded(
-  //             child: Text(
-  //               '${category.name}: \$${category.amount.toStringAsFixed(0)}',
-  //               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-  //               overflow: TextOverflow.ellipsis,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     );
-  //   }).toList();
-  // }
+  Widget _buildActionButton(
+      BuildContext context,
+      IconData icon,
+      String label,
+      Color bgColor,
+      Color iconColor,
+      VoidCallback onPressed
+      ) {
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        width: 140,
+        padding: EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 32, color: iconColor),
+            SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: iconColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class HexColor extends Color {
