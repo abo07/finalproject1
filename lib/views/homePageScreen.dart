@@ -43,7 +43,11 @@ class _HomepagescreenState extends State<Homepagescreen> {
         ),
         elevation: 0,
       ),
-      body: _getScreenForIndex(_selectedIndex), // Display selected screen based on index
+      body: Stack(
+        children: [
+          _getScreenForIndex(_selectedIndex), // Display selected screen based on index
+        ],
+      ),
 
       // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
@@ -75,26 +79,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
           ),
         ],
       ),
-      // Add Floating Action Button only when needed
-      floatingActionButton: _selectedIndex == 1 || _selectedIndex == 2 ?
-      FloatingActionButton(
-        backgroundColor: _selectedIndex == 1 ? Colors.red : Colors.green,
-        onPressed: () {
-          if (_selectedIndex == 1) {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (context) => newExpenseScreen(title: 'Add Expense'),
-            ));
-          } else {
-            Navigator.push(context, MaterialPageRoute(
-              builder: (context) => newIncomeScreen(title: 'Add Income'),
-            ));
-          }
-        },
-        child: Icon(
-          _selectedIndex == 1 ? Icons.remove : Icons.add,
-          color: Colors.white,
-        ),
-      ) : null,
+      // Removed the original FloatingActionButton
     );
   }
 
@@ -125,6 +110,7 @@ class _HomePageState extends State<HomePage> {
   double balance = 0.0;
   List<dynamic> expenseData = [];
   bool isLoading = true;
+  double totalExpense = 0.0;
 
   @override
   void initState() {
@@ -173,8 +159,14 @@ class _HomePageState extends State<HomePage> {
       final response = await http.get(Uri.parse(serverPath + url));
 
       if (response.statusCode == 200) {
+        var data = json.decode(response.body);
         setState(() {
-          expenseData = json.decode(response.body);
+          expenseData = data;
+          // Calculate total expense
+          totalExpense = 0.0;
+          for (var item in expenseData) {
+            totalExpense += double.tryParse(item['amount'].toString()) ?? 0.0;
+          }
         });
       }
     } catch (e) {
@@ -319,9 +311,15 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    // Legend
+                    // Legend with percentages
                     Column(
                       children: expenseData.map((item) {
+                        final amount = double.tryParse(item['amount'].toString()) ?? 0.0;
+                        // Calculate percentage
+                        final percentage = totalExpense > 0
+                            ? (amount / totalExpense * 100)
+                            : 0.0;
+
                         return Padding(
                           padding: EdgeInsets.symmetric(vertical: 4),
                           child: Row(
@@ -342,7 +340,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               Text(
-                                '\$${double.tryParse(item['amount'].toString())?.toStringAsFixed(2) ?? '0.00'}',
+                                '\$${amount.toStringAsFixed(2)} (${percentage.toStringAsFixed(1)}%)',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,

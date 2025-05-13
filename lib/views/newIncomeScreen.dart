@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert'; // Added for URL encoding
+import 'dart:convert';
 import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
+import 'package:intl/intl.dart';
 
 const List<String> categories = <String>['job salary', 'side job', 'gifts', 'buisness'];
-// Map category names to IDs (assuming your database uses numeric IDs)
+// Map category names to IDs
 const Map<String, int> categoryIds = {
   'job salary': 1,
   'side job': 2,
@@ -25,13 +26,11 @@ class newIncomeScreen extends StatefulWidget {
 }
 
 class _newIncomeScreenState extends State<newIncomeScreen> {
-
   DateTime? _selectedDate = DateTime.now(); // Default to today
   TextEditingController amountController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
   TextEditingController notesController = TextEditingController();
-  bool _isLoading = false; // Add a loading state
-  String responseMessage = ""; // For debugging
+  bool _isLoading = false;
 
   // Function to display the date picker
   Future<void> _pickDate(BuildContext context) async {
@@ -40,6 +39,18 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.green,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null && pickedDate != _selectedDate) {
@@ -61,21 +72,15 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
     // URL encode the notes to handle special characters
     String encodedNotes = Uri.encodeComponent(notesController.text);
 
-    // Build the URL with all the data - now using categoryID instead of category name
+    // Build the URL with all the data
     var url = serverPath + "incomes/insertIncome.php?amount=" + amountController.text +
-        "&categoryID=" + categoryID.toString() + // Changed from category to categoryID
+        "&categoryID=" + categoryID.toString() +
         "&notes=" + encodedNotes +
         "&date=" + formattedDate +
-    "&userID=" + userID.toString();
-
-    print("Connecting to: " + url);
+        "&userID=" + userID.toString();
 
     // Send the request to the server
     final response = await http.get(Uri.parse(url));
-
-    // For debugging
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
 
     // Go back to previous screen
     Navigator.pop(context);
@@ -85,7 +90,10 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
     // Check if required fields are filled
     if (_selectedDate == null || amountController.text.isEmpty || categoryController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
+        SnackBar(
+          content: Text('Please fill all required fields'),
+          backgroundColor: Colors.green,
+        ),
       );
       return;
     }
@@ -94,11 +102,6 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
     setState(() {
       _isLoading = true;
     });
-
-    print("Notes: ${notesController.text}");
-    print("Amount: ${amountController.text}");
-    print("Category: ${categoryController.text}");
-    print("CategoryID: ${categoryIds[categoryController.text]}");
 
     // Call the function to send data to PHP
     await insertIncome();
@@ -125,102 +128,222 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dateFormatter = DateFormat('MMM d, yyyy');
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("New Income"),
+        backgroundColor: Colors.green,
+        title: Text(
+          "Add Income",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: Colors.green))
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Debug section - will show response info
-            if (responseMessage.isNotEmpty) Container(
-              padding: EdgeInsets.all(8),
-              color: Colors.amber[100],
-              child: Text("Debug: $responseMessage", style: TextStyle(fontSize: 12)),
-            ),
-
-            const Text("Income date:", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  _selectedDate == null
-                      ? 'No date selected'
-                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: () => _pickDate(context),
-                  child: const Text('Change Date'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            const Text("Choose category:", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            DropdownMenu<String>(
-              width: MediaQuery.of(context).size.width - 32, // Full width minus padding
-              initialSelection: categories.first,
-              controller: categoryController,
-              onSelected: (String? value) {
-                if (value != null) {
-                  categoryController.text = value;
-                }
-              },
-              dropdownMenuEntries: categories.map((String value) {
-                return DropdownMenuEntry<String>(value: value, label: value);
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            const Text("Amount:", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: amountController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Enter amount',
-                prefixText: '\$',
+            // Main Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: <TextInputFormatter>[
-                // Allow decimal numbers for currency
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-            ),
-            const SizedBox(height: 24),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Amount Field
+                    Text(
+                      "Amount",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: amountController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.green),
+                        ),
+                        prefixIcon: Icon(Icons.attach_money, color: Colors.green),
+                        hintText: '0.00',
+                        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                      textAlign: TextAlign.left,
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      ],
+                    ),
 
-            const Text("Notes:", style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 16),
 
-            const SizedBox(height: 8),
+                    Divider(),
 
-            TextField(
-              controller: notesController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Enter notes (optional)',
+                    SizedBox(height: 16),
+
+                    // Category Selection
+                    Text(
+                      "Category",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        value: categoryController.text,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.category, color: Colors.green),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        icon: Icon(Icons.arrow_drop_down, color: Colors.grey),
+                        style: TextStyle(color: Colors.black, fontSize: 16),
+                        isExpanded: true,
+                        onChanged: (String? value) {
+                          if (value != null) {
+                            categoryController.text = value;
+                          }
+                        },
+                        items: categories.map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    Divider(),
+
+                    SizedBox(height: 16),
+
+                    // Date Selection
+                    Text(
+                      "Date",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    InkWell(
+                      onTap: () => _pickDate(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: Colors.green, size: 20),
+                            SizedBox(width: 12),
+                            Text(
+                              _selectedDate == null ? 'Select date' : dateFormatter.format(_selectedDate!),
+                              style: TextStyle(fontSize: 16, color: Colors.black),
+                            ),
+                            Spacer(),
+                            Icon(Icons.arrow_drop_down, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    Divider(),
+
+                    SizedBox(height: 16),
+
+                    // Notes Field
+                    Text(
+                      "Notes (Optional)",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: notesController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.green),
+                        ),
+                        hintText: 'Add notes...',
+                        contentPadding: EdgeInsets.all(12),
+                      ),
+                      style: TextStyle(fontSize: 16),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
               ),
-              maxLines: 3, // Allow multiple lines for notes
-              keyboardType: TextInputType.text,
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 24),
 
-            Center(
+            // Save Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                  backgroundColor: Colors.green, // Green color for income button
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
                 ),
                 onPressed: _saveIncome,
-                child: const Text('Add Income', style: TextStyle(fontSize: 16, color: Colors.white)),
+                child: Text(
+                  'Save Income',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],

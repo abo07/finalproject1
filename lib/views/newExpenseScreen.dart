@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
+import 'package:intl/intl.dart';
 
 const List<String> categories = <String>['Housing', 'Transportation', 'Food', 'Health & Insurance', 'Debt & Loans', 'Savings & Investments', 'Gifts & Donations'];
 // Map category names to IDs (assuming your database uses numeric IDs)
@@ -29,7 +30,6 @@ class newExpenseScreen extends StatefulWidget {
 }
 
 class _newExpenseScreenState extends State<newExpenseScreen> {
-
   DateTime? _selectedDate = DateTime.now(); // Default to today
   TextEditingController amountController = TextEditingController();
   TextEditingController categoryController = TextEditingController();
@@ -43,6 +43,18 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.red,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null && pickedDate != _selectedDate) {
@@ -52,39 +64,37 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
     }
   }
 
-
-
   Future<void> insertExpense() async {
-  // Format date for database (YYYY-MM-DD)
-  String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
-  // Get categoryID from the selected category name
-  int categoryID = categoryIds[categoryController.text] ?? 0;
+    // Format date for database (YYYY-MM-DD)
+    String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
+    // Get categoryID from the selected category name
+    int categoryID = categoryIds[categoryController.text] ?? 0;
 
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  var userID = prefs.getInt("userID");
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var userID = prefs.getInt("userID");
 
+    // Build the URL with all the data
+    var url = serverPath + "expenses/insertExpense.php?amount=" + amountController.text +
+        "&categoryID=" + categoryID.toString() +
+        "&notes=" + notesController.text +
+        "&date=" + formattedDate + "&userID=" + userID.toString();
 
-  // Build the URL with all the data
-  var url = serverPath + "expenses/insertExpense.php?amount=" + amountController.text +
-  "&categoryID=" + categoryID.toString() +
-  "&notes=" + notesController.text +
-  "&date=" + formattedDate + "&userID=" + userID.toString() ;
+    // Send the request to the server
+    final response = await http.get(Uri.parse(url));
+    print("Connecting to: " + url);
 
-  // Send the request to the server
-  final response = await http.get(Uri.parse(url));
-  print("Connecting to: " + url);
-
-  // Go back to previous screen
-  Navigator.pop(context);
+    // Go back to previous screen
+    Navigator.pop(context);
   }
-
-
 
   Future<void> _saveExpense() async {
     // Check if required fields are filled
     if (_selectedDate == null || amountController.text.isEmpty || categoryController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
+        SnackBar(
+          content: Text('Please fill all required fields'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -103,7 +113,6 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
     });
   }
 
-
   @override
   void initState() {
     super.initState();
@@ -120,97 +129,224 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dateFormatter = DateFormat('MMM d, yyyy');
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("New Expense"),
+        backgroundColor: Colors.red,
+        title: Text(
+          "Add Expense",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(color: Colors.red))
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text("Expense date:", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  _selectedDate == null
-                      ? 'No date selected'
-                      : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: () => _pickDate(context),
-                  child: const Text('Change Date'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            const Text("Choose category:", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            DropdownMenu<String>(
-              width: MediaQuery.of(context).size.width - 32, // Full width minus padding
-              initialSelection: categories.first,
-              controller: categoryController,
-              onSelected: (String? value) {
-                if (value != null) {
-                  categoryController.text = value;
-                }
-              },
-              dropdownMenuEntries: categories.map((String value) {
-                return DropdownMenuEntry<String>(value: value, label: value);
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-
-            const Text("Amount:", style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: amountController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Enter amount',
-                prefixText: '\$',
+            // Main Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: <TextInputFormatter>[
-                // Allow decimal numbers for currency
-                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-              ],
-            ),
-            const SizedBox(height: 24),
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Amount Field
+                    Text(
+                      "Amount",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: amountController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                        prefixIcon: Icon(Icons.attach_money, color: Colors.red),
+                        hintText: '0.00',
+                        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                      textAlign: TextAlign.left,
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      ],
+                    ),
 
-            const Text("Notes:", style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 16),
 
-            const SizedBox(height: 8),
+                    Divider(),
 
-            TextField(
-              controller: notesController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Enter notes (optional)',
+                    SizedBox(height: 16),
+
+                    // Category Selection
+                    Text(
+                      "Category",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        value: categoryController.text,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.category, color: Colors.red),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        ),
+                        icon: Icon(Icons.arrow_drop_down, color: Colors.grey),
+                        style: TextStyle(color: Colors.black, fontSize: 16),
+                        isExpanded: true,
+                        onChanged: (String? value) {
+                          if (value != null) {
+                            categoryController.text = value;
+                          }
+                        },
+                        items: categories.map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    Divider(),
+
+                    SizedBox(height: 16),
+
+                    // Date Selection
+                    Text(
+                      "Date",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    InkWell(
+                      onTap: () => _pickDate(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: Colors.red, size: 20),
+                            SizedBox(width: 12),
+                            Text(
+                              _selectedDate == null ? 'Select date' : dateFormatter.format(_selectedDate!),
+                              style: TextStyle(fontSize: 16, color: Colors.black),
+                            ),
+                            Spacer(),
+                            Icon(Icons.arrow_drop_down, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    Divider(),
+
+                    SizedBox(height: 16),
+
+                    // Notes Field
+                    Text(
+                      "Notes (Optional)",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    TextField(
+                      controller: notesController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                        hintText: 'Add notes...',
+                        contentPadding: EdgeInsets.all(12),
+                      ),
+                      style: TextStyle(fontSize: 16),
+                      maxLines: 3,
+                    ),
+                  ],
+                ),
               ),
-              maxLines: 3, // Allow multiple lines for notes
-              keyboardType: TextInputType.text, // Changed from number to text
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 24),
 
-            Center(
+            // Save Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 0,
                 ),
                 onPressed: _saveExpense,
-                child: const Text('Add Expense', style: TextStyle(fontSize: 16)),
+                child: Text(
+                  'Save Expense',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
-
           ],
         ),
       ),

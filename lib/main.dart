@@ -16,14 +16,14 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'ExpenseApp',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
@@ -33,31 +33,52 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, });
-
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-  final TextEditingController _txtUserName= TextEditingController();
-  final TextEditingController _txtPassword= TextEditingController();
-
+  final TextEditingController _txtUserName = TextEditingController();
+  final TextEditingController _txtPassword = TextEditingController();
+  bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
   checkConction() async {
     try {
       final result = await InternetAddress.lookup('google.com');
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        // print('connected to internet');// print(result);// return 1;
+        // Connected to internet
       }
     } on SocketException catch (_) {
-      // print('not connected to internet');// print(result);
       var uti = new utils();
-      uti.showMyDialog(context, "אין אינטרנט", "האפליקציה דורשת חיבור לאינטרנט, נא להתחבר בבקשה","");
+      uti.showMyDialog(context, "אין אינטרנט", "האפליקציה דורשת חיבור לאינטרנט, נא להתחבר בבקשה", "");
       return;
+    }
+  }
 
+  Future checkLogin() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    var url = "checkLogin/checkLogin.php?userName=" + _txtUserName.text +
+        "&password=" + _txtPassword.text;
+    final response = await http.get(Uri.parse(serverPath + url));
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (checkLoginModel.fromJson(jsonDecode(response.body)).userID == "0") {
+      var uti = new utils();
+      uti.showMyDialog(context, "", '', 'Username or password is incorrect');
+    } else {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('userID', checkLoginModel.fromJson(jsonDecode(response.body)).userID!);
+      await prefs.setString('fullName', checkLoginModel.fromJson(jsonDecode(response.body)).fullName!);
+      Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ExpenseApp')));
     }
   }
 
@@ -66,121 +87,161 @@ class _MyHomePageState extends State<MyHomePage> {
     checkConction();
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("ExpenseApp"),
-      ),
-
-
-      body: Center(
-
-
-        child: Container(
-
-          alignment: Alignment.center,
-          width: 800,
-          child: Column(
-            children: <Widget>[
-
-              Text("username"),
-              TextField(
-                controller: _txtUserName,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your  username',
-                ),
-              ),
-
-
-              Text("Password"),
-              TextField(
-                controller: _txtPassword,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter your  Password',
-                ),
-
-              ),
-
-              Row(
-                children: [
-                  const SizedBox(
-                    width: 200.0,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-
-                      // Navigate to the second screen when the button is pressed
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => signUp(title: 'ahmad',)));
-
-                    },
-                    child: Text('create'),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  // App Logo/Icon
+                  Icon(
+                    Icons.account_balance_wallet,
+                    size: 80,
+                    color: Colors.blue,
                   ),
 
-                  const SizedBox(
-                    width: 20.0,
-                  ),
+                  SizedBox(height: 16),
 
-                  TextButton(
-                    style: ButtonStyle(
-                      foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                  // App Name
+                  Text(
+                    "ExpenseApp",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
                     ),
-                    onPressed: () {
-                      checkLogin();
-                      /*
-                       Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
-                      var uti = new utils();
-                      uti.showMyDialog(context, _txt1.text, _txt2.text,'ahmad');
-                       */
-                    },
-                    child: Text('login'),
+                  ),
+
+                  SizedBox(height: 8),
+
+                  // Tagline
+                  Text(
+                    "Manage your finances with ease",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+
+                  SizedBox(height: 40),
+
+                  // Username Field
+                  TextField(
+                    controller: _txtUserName,
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      hintText: 'Enter your username',
+                      prefixIcon: Icon(Icons.person),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    keyboardType: TextInputType.text,
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Password Field
+                  TextField(
+                    controller: _txtPassword,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Enter your password',
+                      prefixIcon: Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+
+                  SizedBox(height: 30),
+
+                  // Login Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : checkLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                          : Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 24),
+
+                  // Create Account Section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => signUp(title: 'Sign Up')),
+                          );
+                        },
+                        child: Text(
+                          'Create Account',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-
-              // utils.showM(_txt1.text, _txt2.text, 'abo mok', context),
-            ],
+            ),
           ),
         ),
       ),
-
-
-
     );
   }
-
-
-  Future checkLogin() async {
-    var url = "checkLogin/checkLogin.php?userName=" + _txtUserName.text +
-        "&password=" + _txtPassword.text;
-    final response = await http.get(Uri.parse(serverPath + url));
-    print("myLink:" + serverPath + url);
-    //Navigator.pop(context);
-    print("fff");
-    if(checkLoginModel.fromJson(jsonDecode(response.body)).userID == "0")
-    {
-      // return 'ת.ז ו/או הסיסמה שגויים';
-      var uti = new utils();
-      uti.showMyDialog(context, "", '', 'ת.ז ו/או הסיסמה שגויים');
-
-    }
-    else
-    {
-      // print("SharedPreferences 1");
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      print("1");
-      await prefs.setInt('userID', checkLoginModel.fromJson(jsonDecode(response.body)).userID!);
-      print("1");
-      await prefs.setString('fullName', checkLoginModel.fromJson(jsonDecode(response.body)).fullName!);
-      print("1");
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Homepagescreen(title: 'ahmad',)));
-
-      // return null;
-    }
-
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
-
-  }
-
 }

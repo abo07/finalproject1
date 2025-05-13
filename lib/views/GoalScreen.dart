@@ -188,10 +188,6 @@ class _GoalScreenState extends State<GoalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Financial Goals'),
-        backgroundColor: Colors.blue,
-      ),
       body: Center(
         child: Container(
           alignment: Alignment.center,

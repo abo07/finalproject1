@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/APIconfigue.dart';
 import 'package:http/http.dart' as http;
 
+import 'newIncomeScreen.dart';
+
 // Income Screen with correct naming and property mappings
 class IncomeScreen extends StatefulWidget {
   @override
@@ -88,131 +90,148 @@ class _IncomeScreenState extends State<IncomeScreen> {
     final formatter = NumberFormat.currency(symbol: '\$');
     final dateFormatter = DateFormat('yyyy-MM-dd'); // Format based on your data
 
-    return RefreshIndicator(
-      onRefresh: fetchIncomes,
-      child: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.green))
-          : _errorMessage.isNotEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Error loading incomes',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(_errorMessage),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: fetchIncomes,
-              child: Text('Retry'),
-            ),
-          ],
-        ),
-      )
-          : _incomes.isEmpty
-          ? Center(
-        child: Text(
-          'No incomes available',
-          style: TextStyle(fontSize: 23, color: Colors.black),
-        ),
-      )
-          : Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Your Incomes',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: fetchIncomes,
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator(color: Colors.green))
+            : _errorMessage.isNotEmpty
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Error loading incomes',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              Text(_errorMessage),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: fetchIncomes,
+                child: Text('Retry'),
+              ),
+            ],
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _incomes.length,
-              itemBuilder: (context, index) {
-                // Get the income at this index
-                final income = _incomes[index];
+        )
+            : _incomes.isEmpty
+            ? Center(
+          child: Text(
+            'No incomes available',
+            style: TextStyle(fontSize: 23, color: Colors.black),
+          ),
+        )
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Your Incomes',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _incomes.length,
+                itemBuilder: (context, index) {
+                  // Get the income at this index
+                  final income = _incomes[index];
 
-                // Format the date if it exists
-                String formattedDate = 'No date';
-                try {
-                  if (income['incomeDate'] != null) {
-                    final date = dateFormatter.parse(income['incomeDate']);
-                    formattedDate = DateFormat('MMM d, yyyy').format(date);
+                  // Format the date if it exists
+                  String formattedDate = 'No date';
+                  try {
+                    if (income['incomeDate'] != null) {
+                      final date = dateFormatter.parse(income['incomeDate']);
+                      formattedDate = DateFormat('MMM d, yyyy').format(date);
+                    }
+                  } catch (e) {
+                    formattedDate = income['incomeDate'] ?? 'Unknown date';
+                    print("Date parsing error: $e");
                   }
-                } catch (e) {
-                  formattedDate = income['incomeDate'] ?? 'Unknown date';
-                  print("Date parsing error: $e");
-                }
 
-                // Format the amount if it exists
-                String formattedAmount = 'N/A';
-                try {
-                  if (income['amount'] != null) {
-                    final amount = double.tryParse(income['amount'].toString()) ?? 0.0;
-                    formattedAmount = formatter.format(amount);
+                  // Format the amount if it exists
+                  String formattedAmount = 'N/A';
+                  try {
+                    if (income['amount'] != null) {
+                      final amount = double.tryParse(income['amount'].toString()) ?? 0.0;
+                      formattedAmount = formatter.format(amount);
+                    }
+                  } catch (e) {
+                    formattedAmount = income['amount']?.toString() ?? 'N/A';
+                    print("Amount parsing error: $e");
                   }
-                } catch (e) {
-                  formattedAmount = income['amount']?.toString() ?? 'N/A';
-                  print("Amount parsing error: $e");
-                }
 
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 2,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.all(16),
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Date
-                        Expanded(
-                          child: Text(
-                            formattedDate,
+                  return Card(
+                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    elevation: 2,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.all(16),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Date
+                          Expanded(
+                            child: Text(
+                              formattedDate,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          // Amount
+                          Text(
+                            formattedAmount,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: Colors.green, // Changed to green for incomes
                             ),
                           ),
-                        ),
-                        // Amount
-                        Text(
-                          formattedAmount,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green, // Changed to green for incomes
+                        ],
+                      ),
+                      subtitle: income['notes'] != null && income['notes'].toString().isNotEmpty
+                          ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 8),
+                          Text(
+                            income['notes'],
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      )
+                          : null,
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => deleteExpense(context, income['incomeID'].toString()),
+                      ),
                     ),
-                    subtitle: income['notes'] != null && income['notes'].toString().isNotEmpty
-                        ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 8),
-                        Text(
-                          income['notes'],
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    )
-                        : null,
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => deleteExpense(context, income['incomeID'].toString()),
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+      // Add floating action button for adding income
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.green,
+        onPressed: () {
+          print("fghjkl");
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => newIncomeScreen(title: 'Add Income'))
+          );
+          },
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
     );
   }

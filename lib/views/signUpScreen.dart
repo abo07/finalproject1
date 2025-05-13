@@ -23,135 +23,222 @@ class _signUp extends State<signUp> {
   final _username = TextEditingController();
   final _NewPassword = TextEditingController();
   final _ConfirmPassword = TextEditingController();
-  final _formKey = GlobalKey<FormState>(); // Add form key for validation
-
-
-
-
+  final _formKey = GlobalKey<FormState>();
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text("Create Account", style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.blue.shade50],
-          ),
-        ),
+      body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(24),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  // Header
-                  Center(
-                    child: Column(
-                      children: [
-                        Icon(Icons.person_add, size: 64, color: Theme.of(context).primaryColor),
-                        SizedBox(height: 16),
-                        Text(
-                          "Join Now",
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "Please fill in the information below",
-                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                        ),
-                      ],
+                  // Header section
+                  Icon(
+                    Icons.account_circle,
+                    size: 70,
+                    color: Colors.blue,
+                  ),
+
+                  SizedBox(height: 16),
+
+                  Text(
+                    "Create Account",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
                     ),
                   ),
-                  SizedBox(height: 32),
 
-                  // Form fields with improved styling
-                  _buildInputField(_firstName, "First Name", Icons.person,
-                      validator: (value) => value.isEmpty ? "First name is required" : null),
-                  SizedBox(height: 16),
+                  SizedBox(height: 8),
 
-                  _buildInputField(_LastName, "Last Name", Icons.person_outline),
-                  SizedBox(height: 16),
-
-                  _buildInputField(_txtEmail, "Email", Icons.email,
-                      validator: (value) => value.isEmpty ? "Email is required" : null,
-                      keyboardType: TextInputType.emailAddress),
-                  SizedBox(height: 16),
-
-                  _buildInputField(_username, "Username", Icons.account_circle,
-                      validator: (value) => value.isEmpty ? "Username is required" : null),
-                  SizedBox(height: 16),
-
-                  _buildInputField(_NewPassword, "Password", Icons.lock,
-                      validator: (value) => value.isEmpty ? "Password is required" : null,
-                      isPassword: true),
-                  SizedBox(height: 16),
-
-                  _buildInputField(_ConfirmPassword, "Confirm Password", Icons.lock_outline,
-                      validator: (value) => value != _NewPassword.text ? "Passwords don't match" : null,
-                      isPassword: true),
-                  SizedBox(height: 32),
-
-                  // Buttons
-                  Center(
-                    child: Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              // Form is valid, proceed with account creation
-                              User user2 = new User();
-                              user2.firstName = _firstName.text;
-                              user2.lastName = _LastName.text;
-                              user2.Email = _txtEmail.text;
-                              user2.userName = _username.text;
-                              user2.password = _NewPassword.text;
-
-                              insertUser(user2);
-                              print("fffffff");
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-
-                            padding: EdgeInsets.symmetric(horizontal: 48, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                          ),
-                          child: Text('CREATE ACCOUNT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        ),
-                        SizedBox(height: 24),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
-                          },
-                          child: RichText(
-                            text: TextSpan(
-                              text: 'Already have an account? ',
-                              style: TextStyle(color: Colors.black87),
-                              children: [
-                                TextSpan(
-                                  text: 'Login',
-                                  style: TextStyle(
-                                    color: Theme.of(context).primaryColor,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                  Text(
+                    "Enter your information to get started",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  SizedBox(height: 32),
+
+                  // Form fields
+                  // First & Last Name (side by side)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInputField(
+                            _firstName,
+                            "First Name",
+                            Icons.person,
+                            validator: (value) => value.isEmpty ? "Required" : null
+                        ),
+                      ),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: _buildInputField(
+                            _LastName,
+                            "Last Name",
+                            Icons.person_outline
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Email
+                  _buildInputField(
+                      _txtEmail,
+                      "Email",
+                      Icons.email,
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return "Email is required";
+                        } else if (!value.contains('@') || !value.contains('.')) {
+                          return "Enter a valid email";
+                        }
+                        return null;
+                      },
+                      keyboardType: TextInputType.emailAddress
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Username
+                  _buildInputField(
+                      _username,
+                      "Username",
+                      Icons.account_circle,
+                      validator: (value) => value.isEmpty ? "Username is required" : null
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Password
+                  _buildPasswordField(
+                      _NewPassword,
+                      "Password",
+                      Icons.lock,
+                      isVisible: _isPasswordVisible,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return "Password is required";
+                        } else if (value.length < 6) {
+                          return "Password must be at least 6 characters";
+                        }
+                        return null;
+                      }
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Confirm Password
+                  _buildPasswordField(
+                      _ConfirmPassword,
+                      "Confirm Password",
+                      Icons.lock_outline,
+                      isVisible: _isConfirmPasswordVisible,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                        });
+                      },
+                      validator: (value) => value != _NewPassword.text ? "Passwords don't match" : null
+                  ),
+
+                  SizedBox(height: 32),
+
+                  // Sign Up Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            _isLoading = true;
+                          });
+
+                          // Create user object
+                          User user = new User();
+                          user.firstName = _firstName.text;
+                          user.lastName = _LastName.text;
+                          user.Email = _txtEmail.text;
+                          user.userName = _username.text;
+                          user.password = _NewPassword.text;
+
+                          // Send to server
+                          insertUser(user);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                          : Text(
+                        'Create Account',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 24),
+
+                  // Login link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Already have an account?",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+                        },
+                        child: Text(
+                          'Login',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -167,47 +254,78 @@ class _signUp extends State<signUp> {
       TextEditingController controller,
       String label,
       IconData icon, {
-        bool isPassword = false,
         String? Function(String)? validator,
         TextInputType keyboardType = TextInputType.text,
       }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
-          ),
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.grey[600]),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-        SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(vertical: 16),
-          ),
-          obscureText: isPassword  ,
-          validator: validator != null ? (value) => validator(value ?? "") : null,
-          keyboardType: keyboardType,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.blue),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.red),
+        ),
+        contentPadding: EdgeInsets.symmetric(vertical: 16),
+      ),
+      validator: validator != null ? (value) => validator(value ?? "") : null,
+      keyboardType: keyboardType,
+    );
+  }
+
+  // Helper method for password fields with visibility toggle
+  Widget _buildPasswordField(
+      TextEditingController controller,
+      String label,
+      IconData icon, {
+        required bool isVisible,
+        required Function onToggleVisibility,
+        String? Function(String)? validator,
+      }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: !isVisible,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.grey[600]),
+        suffixIcon: IconButton(
+          icon: Icon(
+            isVisible ? Icons.visibility : Icons.visibility_off,
+            color: Colors.grey,
+          ),
+          onPressed: () => onToggleVisibility(),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.blue),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.red),
+        ),
+        contentPadding: EdgeInsets.symmetric(vertical: 16),
+      ),
+      validator: validator != null ? (value) => validator(value ?? "") : null,
     );
   }
 
@@ -220,8 +338,20 @@ class _signUp extends State<signUp> {
     final response = await http.get(Uri.parse(serverPath + url));
     print("myLink:" + serverPath + url);
 
-     Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
+    // Set loading to false when complete
+    setState(() {
+      _isLoading = false;
+    });
 
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Account created successfully!"),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    // Navigate to login page
+    Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
   }
 }
-

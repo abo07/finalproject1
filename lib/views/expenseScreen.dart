@@ -85,156 +85,172 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     final formatter = NumberFormat.currency(symbol: '\$');
     final dateFormatter = DateFormat('yyyy-MM-dd');
 
-    return RefreshIndicator(
-      onRefresh: fetchExpenses,
-      child: _isLoading
-          ? Center(child: CircularProgressIndicator(color: Colors.red))
-          : _errorMessage.isNotEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Error loading expenses',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(_errorMessage),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: fetchExpenses,
-              child: Text('Retry'),
-            ),
-          ],
-        ),
-      )
-          : _expenses.isEmpty
-          ? Center(
-        child: Text(
-          'No expenses available',
-          style: TextStyle(fontSize: 23, color: Colors.black),
-        ),
-      )
-          : Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Your Expenses',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: fetchExpenses,
+        child: _isLoading
+            ? Center(child: CircularProgressIndicator(color: Colors.red))
+            : _errorMessage.isNotEmpty
+            ? Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Error loading expenses',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              Text(_errorMessage),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: fetchExpenses,
+                child: Text('Retry'),
+              ),
+            ],
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _expenses.length,
-              itemBuilder: (context, index) {
-                final expense = _expenses[index];
+        )
+            : _expenses.isEmpty
+            ? Center(
+          child: Text(
+            'No expenses available',
+            style: TextStyle(fontSize: 23, color: Colors.black),
+          ),
+        )
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Your Expenses',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _expenses.length,
+                itemBuilder: (context, index) {
+                  final expense = _expenses[index];
 
-                String formattedDate = 'No date';
-                try {
-                  if (expense['expenseDate'] != null) {
-                    final date = dateFormatter.parse(expense['expenseDate']);
-                    formattedDate = DateFormat('MMM d, yyyy').format(date);
+                  String formattedDate = 'No date';
+                  try {
+                    if (expense['expenseDate'] != null) {
+                      final date = dateFormatter.parse(expense['expenseDate']);
+                      formattedDate = DateFormat('MMM d, yyyy').format(date);
+                    }
+                  } catch (e) {
+                    formattedDate = expense['expenseDate'] ?? 'Unknown date';
                   }
-                } catch (e) {
-                  formattedDate = expense['expenseDate'] ?? 'Unknown date';
-                }
 
-                String formattedAmount = 'N/A';
-                try {
-                  if (expense['amount'] != null) {
-                    final amount = double.tryParse(expense['amount'].toString()) ?? 0.0;
-                    formattedAmount = formatter.format(amount);
+                  String formattedAmount = 'N/A';
+                  try {
+                    if (expense['amount'] != null) {
+                      final amount = double.tryParse(expense['amount'].toString()) ?? 0.0;
+                      formattedAmount = formatter.format(amount);
+                    }
+                  } catch (e) {
+                    formattedAmount = expense['amount']?.toString() ?? 'N/A';
                   }
-                } catch (e) {
-                  formattedAmount = expense['amount']?.toString() ?? 'N/A';
-                }
 
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  elevation: 2,
-                  child: ListTile(
-                    contentPadding: EdgeInsets.all(16),
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Date
-                        Expanded(
-                          child: Text(
-                            formattedDate,
+                  return Card(
+                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    elevation: 2,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.all(16),
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Date
+                          Expanded(
+                            child: Text(
+                              formattedDate,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                          // Amount
+                          Text(
+                            formattedAmount,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              color: Colors.red,
                             ),
                           ),
-                        ),
-                        // Amount
-                        Text(
-                          formattedAmount,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
+                        ],
+                      ),
+                      subtitle: expense['notes'] != null && expense['notes'].toString().isNotEmpty
+                          ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 8),
+                          Text(
+                            expense['notes'],
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    subtitle: expense['notes'] != null && expense['notes'].toString().isNotEmpty
-                        ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 8),
-                        Text(
-                          expense['notes'],
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    )
-                        : null,
-                    // Fixed delete button
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => deleteExpense(context, expense['expenseID'].toString()),
-                    ),
+                        ],
+                      )
+                          : null,
+                      // Fixed delete button
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => deleteExpense(context, expense['expenseID'].toString()),
+                      ),
 
-                    onTap: () {
-                      // Show details in a dialog
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text('Expense Details'),
-                          content: SingleChildScrollView(
-                            child: ListBody(
-                              children: [
-                                Text('Date: $formattedDate'),
-                                Text('Amount: $formattedAmount'),
-                                if (expense['notes'] != null)
-                                  Text('Notes: ${expense['notes']}'),
-                                Text('ID: ${expense['expenseID']}'),
-                                Text('Category ID: ${expense['catogeryID']}'),
-                              ],
+                      onTap: () {
+                        // Show details in a dialog
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Expense Details'),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: [
+                                  Text('Date: $formattedDate'),
+                                  Text('Amount: $formattedAmount'),
+                                  if (expense['notes'] != null)
+                                    Text('Notes: ${expense['notes']}'),
+                                  Text('ID: ${expense['expenseID']}'),
+                                  Text('Category ID: ${expense['catogeryID']}'),
+                                ],
+                              ),
                             ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text('Close'),
+                              ),
+                            ],
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: Text('Close'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
 
-        ],
+          ],
+        ),
+      ),
+      // Add floating action button for adding expenses
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        onPressed: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => newExpenseScreen(title: 'Add Expense'))
+          );
+        },
+        child: Icon(
+          Icons.remove,
+          color: Colors.white,
+        ),
       ),
     );
 
