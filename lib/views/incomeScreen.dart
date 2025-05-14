@@ -19,6 +19,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   List<dynamic> _incomes = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  String _selectedTimeFrame = 'All Time'; // Default time frame
 
   @override
   void initState() {
@@ -126,9 +127,42 @@ class _IncomeScreenState extends State<IncomeScreen> {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Your Incomes',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Your Incomes',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  // Time frame filter dropdown
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: DropdownButton<String>(
+                      value: _selectedTimeFrame,
+                      icon: Icon(Icons.filter_list, color: Colors.green, size: 20),
+                      underline: SizedBox(), // Remove the default underline
+                      isDense: true,
+                      style: TextStyle(color: Colors.black, fontSize: 14),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedTimeFrame = newValue!;
+                          // In a real app, filter logic would go here
+                        });
+                      },
+                      items: <String>['All Time', 'Last Month', 'Last 3 Months', 'Last 6 Months', 'Last Year']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -187,7 +221,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.green, // Changed to green for incomes
+                              color: Colors.green,
                             ),
                           ),
                         ],
@@ -227,7 +261,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
               context,
               MaterialPageRoute(builder: (context) => newIncomeScreen(title: 'Add Income'))
           );
-          },
+        },
         child: Icon(
           Icons.add,
           color: Colors.white,

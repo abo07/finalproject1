@@ -16,6 +16,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   List<dynamic> _expenses = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  String _selectedTimeFrame = 'All Time'; // Default time frame
 
   @override
   void initState() {
@@ -79,7 +80,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     fetchExpenses();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.currency(symbol: '\$');
@@ -121,9 +121,42 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Your Expenses',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Your Expenses',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  // Time frame filter dropdown
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: DropdownButton<String>(
+                      value: _selectedTimeFrame,
+                      icon: Icon(Icons.filter_list, color: Colors.red, size: 20),
+                      underline: SizedBox(), // Remove the default underline
+                      isDense: true,
+                      style: TextStyle(color: Colors.black, fontSize: 14),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedTimeFrame = newValue!;
+                          // In a real app, filter logic would go here
+                        });
+                      },
+                      items: <String>['All Time', 'Last Month', 'Last 3 Months', 'Last 6 Months', 'Last Year']
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -215,8 +248,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                   Text('Amount: $formattedAmount'),
                                   if (expense['notes'] != null)
                                     Text('Notes: ${expense['notes']}'),
-                                  Text('ID: ${expense['expenseID']}'),
-                                  Text('Category ID: ${expense['catogeryID']}'),
+                                  Text('Category: ${expense['categoryID']}'),
                                 ],
                               ),
                             ),
@@ -234,7 +266,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                 },
               ),
             ),
-
           ],
         ),
       ),
@@ -253,6 +284,5 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         ),
       ),
     );
-
   }
 }

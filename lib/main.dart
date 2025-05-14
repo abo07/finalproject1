@@ -105,18 +105,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   SizedBox(height: 16),
 
-                  // App Name
-                  Text(
-                    "ExpenseApp",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-
-                  SizedBox(height: 8),
-
                   // Tagline
                   Text(
                     "Manage your finances with ease",
