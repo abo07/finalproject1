@@ -312,7 +312,7 @@ class _GoalScreenState extends State<GoalScreen> {
                                   ),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.edit),
+                                  icon: Icon(Icons.add),
                                   onPressed: () => _updateGoalProgress(index),
                                   tooltip: 'Update progress',
                                 ),

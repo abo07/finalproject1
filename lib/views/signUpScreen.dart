@@ -114,7 +114,6 @@ class _signUp extends State<signUp> {
                               user2.password = _NewPassword.text;
 
                               insertUser(user2);
-                              print("fffffff");
                               Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
                             }
                           },
@@ -218,7 +217,6 @@ class _signUp extends State<signUp> {
     final response = await http.get(Uri.parse(serverPath + url));
     print("myLink:" + serverPath + url);
 
-    Navigator.push(context, MaterialPageRoute(builder: (context) => MyHomePage()));
 
   }
 }

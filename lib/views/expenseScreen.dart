@@ -28,7 +28,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = '';
-    });
+    })
+
+    ;
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -36,6 +38,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
       var url = "expenses/getExpenses.php?userID=" + userID.toString();
       final response = await http.get(Uri.parse(serverPath + url));
+      print("myLink:" + serverPath + url);
 
       if (response.statusCode == 200) {
         print("API Response: ${response.body}");
@@ -248,13 +251,14 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                   Text('Amount: $formattedAmount'),
                                   if (expense['notes'] != null)
                                     Text('Notes: ${expense['notes']}'),
-                                  Text('Category: Transportation'),
+                                  Text('Category: ${expense['categoryName']}'),
                                 ],
                               ),
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
+
                                 child: Text('Close'),
                               ),
                             ],

@@ -257,7 +257,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                                   Text('Amount: $formattedAmount'),
                                   if (income['notes'] != null)
                                     Text('Notes: ${income['notes']}'),
-                                  Text('Category: job salary'),
+                                  Text('Category: ${income['categoryName']}'),
                                 ],
                               ),
                             ),
