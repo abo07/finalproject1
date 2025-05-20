@@ -8,7 +8,7 @@ import '../utils/utils.dart';
 import 'package:intl/intl.dart';
 
 const List<String> categories = <String>['job salary', 'side job', 'gifts', 'buisness'];
-// Map category names to IDs
+
 const Map<String, int> categoryIds = {
   'job salary': 1,
   'side job': 2,
@@ -32,7 +32,7 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
   TextEditingController notesController = TextEditingController();
   bool _isLoading = false;
 
-  // Function to display the date picker
+
   Future<void> _pickDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -61,33 +61,33 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
   }
 
   Future<void> insertIncome() async {
-    // Format date for database (YYYY-MM-DD)
+
     String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
 
-    // Get categoryID from the selected category name
+
     int categoryID = categoryIds[categoryController.text] ?? 0;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userID = prefs.getInt("userID");
 
-    // URL encode the notes to handle special characters
+
     String encodedNotes = Uri.encodeComponent(notesController.text);
 
-    // Build the URL with all the data
+
     var url = serverPath + "incomes/insertIncome.php?amount=" + amountController.text +
         "&categoryID=" + categoryID.toString() +
         "&notes=" + encodedNotes +
         "&date=" + formattedDate +
         "&userID=" + userID.toString();
 
-    // Send the request to the server
+
     final response = await http.get(Uri.parse(url));
 
-    // Go back to previous screen
+
     Navigator.pop(context);
   }
 
   Future<void> _saveIncome() async {
-    // Check if required fields are filled
+
     if (_selectedDate == null || amountController.text.isEmpty || categoryController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -98,15 +98,16 @@ class _newIncomeScreenState extends State<newIncomeScreen> {
       return;
     }
 
-    // Show loading spinner
+
+
     setState(() {
       _isLoading = true;
     });
 
-    // Call the function to send data to PHP
+
     await insertIncome();
 
-    // Hide loading spinner
+
     setState(() {
       _isLoading = false;
     });

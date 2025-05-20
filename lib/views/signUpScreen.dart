@@ -73,7 +73,6 @@ class _signUp extends State<signUp> {
                   ),
                   SizedBox(height: 32),
 
-                  // Form fields with improved styling
                   _buildInputField(_firstName, "First Name", Icons.person,
                       validator: (value) => value.isEmpty ? "First name is required" : null),
                   SizedBox(height: 16),
@@ -100,7 +99,6 @@ class _signUp extends State<signUp> {
                       isPassword: true),
                   SizedBox(height: 32),
 
-                  // Buttons
                   Center(
                     child: Column(
                       children: [
@@ -162,7 +160,7 @@ class _signUp extends State<signUp> {
     );
   }
 
-  // Helper method to build consistent input fields
+
   Widget _buildInputField(
       TextEditingController controller,
       String label,

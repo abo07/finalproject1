@@ -67,7 +67,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     }
   }
 
-  // Simple delete function
+
   Future deleteExpense(BuildContext context, String expenseID) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? getInfoDeviceSTR = prefs.getString("getInfoDeviceSTR");
@@ -236,7 +236,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                       ),
 
                       onTap: () {
-                        // Show details in a dialog
+
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
@@ -248,7 +248,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                                   Text('Amount: $formattedAmount'),
                                   if (expense['notes'] != null)
                                     Text('Notes: ${expense['notes']}'),
-                                  Text('Category: ${expense['categoryID']}'),
+                                  Text('Category: Transportation'),
                                 ],
                               ),
                             ),
@@ -269,7 +269,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
           ],
         ),
       ),
-      // Add floating action button for adding expenses
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
         onPressed: () {

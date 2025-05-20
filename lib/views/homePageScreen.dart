@@ -12,7 +12,7 @@ import 'incomeScreen.dart';
 import 'package:finalproject1/views/newIncomeScreen.dart';
 import 'package:http/http.dart' as http;
 
-// Main HomePage class with BottomNavigationBar
+
 class Homepagescreen extends StatefulWidget {
   const Homepagescreen({super.key, required this.title});
   final String title;
@@ -24,7 +24,7 @@ class Homepagescreen extends StatefulWidget {
 class _HomepagescreenState extends State<Homepagescreen> {
   int _selectedIndex = 0; // Default index (Home)
 
-  // Define the titles for each tab
+
   final List<String> _pageTitles = [
     'Home',
     'Expenses',
@@ -49,7 +49,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
         ],
       ),
 
-      // Bottom Navigation Bar
+
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,
@@ -83,7 +83,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
     );
   }
 
-  // Helper method to get the correct screen based on index
+
   Widget _getScreenForIndex(int index) {
     switch (index) {
       case 0:
@@ -100,7 +100,7 @@ class _HomepagescreenState extends State<Homepagescreen> {
   }
 }
 
-// Simplified Home Screen
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();

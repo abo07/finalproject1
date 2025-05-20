@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:finalproject1/utils/DB.dart';
 import 'package:finalproject1/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -161,7 +160,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   SizedBox(height: 30),
 
-                  // Login Button
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -196,7 +194,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   SizedBox(height: 24),
 
-                  // Create Account Section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

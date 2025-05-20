@@ -8,8 +8,8 @@ import '../utils/APIconfigue.dart';
 import '../utils/utils.dart';
 import 'package:intl/intl.dart';
 
-const List<String> categories = <String>['Housing', 'Transportation', 'Food', 'Health & Insurance', 'Debt & Loans', 'Savings & Investments', 'Gifts & Donations'];
-// Map category names to IDs (assuming your database uses numeric IDs)
+const List<String> categories = <String>['Housing', 'Transportation', 'Food', 'Health & Insurance', 'Debt & Loans', 'Savings & Investments', 'Gifts & Donations','Goals'];
+
 const Map<String, int> categoryIds = {
   'Housing': 1,
   'Transportation': 2,
@@ -17,7 +17,8 @@ const Map<String, int> categoryIds = {
   'Health & Insurance': 4,
   'Debt & Loans': 5,
   'Savings & Investments': 6,
-  'Gifts & Donations': 7
+  'Gifts & Donations': 7,
+  'Goals': 8
 };
 
 class newExpenseScreen extends StatefulWidget {
@@ -36,7 +37,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
   TextEditingController notesController = TextEditingController();
   bool _isLoading = false; // Add a loading state
 
-  // Function to display the date picker
+
   Future<void> _pickDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -65,30 +66,30 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
   }
 
   Future<void> insertExpense() async {
-    // Format date for database (YYYY-MM-DD)
+
     String formattedDate = "${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}";
-    // Get categoryID from the selected category name
+
     int categoryID = categoryIds[categoryController.text] ?? 0;
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userID = prefs.getInt("userID");
 
-    // Build the URL with all the data
+
     var url = serverPath + "expenses/insertExpense.php?amount=" + amountController.text +
         "&categoryID=" + categoryID.toString() +
         "&notes=" + notesController.text +
         "&date=" + formattedDate + "&userID=" + userID.toString();
 
-    // Send the request to the server
+
     final response = await http.get(Uri.parse(url));
     print("Connecting to: " + url);
 
-    // Go back to previous screen
+
     Navigator.pop(context);
   }
 
   Future<void> _saveExpense() async {
-    // Check if required fields are filled
+
     if (_selectedDate == null || amountController.text.isEmpty || categoryController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -99,15 +100,15 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
       return;
     }
 
-    // Show loading spinner
+
     setState(() {
       _isLoading = true;
     });
 
-    // Call the function to send data to PHP
+
     await insertExpense();
 
-    // Hide loading spinner
+
     setState(() {
       _isLoading = false;
     });
@@ -158,7 +159,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Amount Field
+
                     Text(
                       "Amount",
                       style: TextStyle(
@@ -201,7 +202,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
 
                     SizedBox(height: 16),
 
-                    // Category Selection
+
                     Text(
                       "Category",
                       style: TextStyle(
@@ -246,7 +247,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
 
                     SizedBox(height: 16),
 
-                    // Date Selection
+
                     Text(
                       "Date",
                       style: TextStyle(
@@ -286,7 +287,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
 
                     SizedBox(height: 16),
 
-                    // Notes Field
+
                     Text(
                       "Notes (Optional)",
                       style: TextStyle(
@@ -324,7 +325,7 @@ class _newExpenseScreenState extends State<newExpenseScreen> {
 
             SizedBox(height: 24),
 
-            // Save Button
+
             SizedBox(
               width: double.infinity,
               height: 48,

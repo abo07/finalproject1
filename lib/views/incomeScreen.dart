@@ -8,14 +8,14 @@ import 'package:http/http.dart' as http;
 
 import 'newIncomeScreen.dart';
 
-// Income Screen with correct naming and property mappings
+
 class IncomeScreen extends StatefulWidget {
   @override
   _IncomeScreenState createState() => _IncomeScreenState();
 }
 
 class _IncomeScreenState extends State<IncomeScreen> {
-  // List to store raw income data from API
+
   List<dynamic> _incomes = [];
   bool _isLoading = true;
   String _errorMessage = '';
@@ -24,7 +24,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch incomes when screen initializes
+
     fetchIncomes();
   }
 
@@ -42,11 +42,11 @@ class _IncomeScreenState extends State<IncomeScreen> {
       final response = await http.get(Uri.parse(serverPath + url));
 
       if (response.statusCode == 200) {
-        // Print response for debugging
+
         print("API Response: ${response.body}");
 
         if (response.body.isNotEmpty) {
-          // Parse JSON directly
+
           final jsonData = json.decode(response.body);
           setState(() {
             _incomes = jsonData;
@@ -150,7 +150,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedTimeFrame = newValue!;
-                          // In a real app, filter logic would go here
+
                         });
                       },
                       items: <String>['All Time', 'Last Month', 'Last 3 Months', 'Last 6 Months', 'Last Year']
@@ -172,7 +172,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                   // Get the income at this index
                   final income = _incomes[index];
 
-                  // Format the date if it exists
+
                   String formattedDate = 'No date';
                   try {
                     if (income['incomeDate'] != null) {
@@ -184,7 +184,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                     print("Date parsing error: $e");
                   }
 
-                  // Format the amount if it exists
+
                   String formattedAmount = 'N/A';
                   try {
                     if (income['amount'] != null) {
@@ -244,15 +244,43 @@ class _IncomeScreenState extends State<IncomeScreen> {
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () => deleteExpense(context, income['incomeID'].toString()),
                       ),
+                      onTap: () {
+
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Expense Details'),
+                            content: SingleChildScrollView(
+                              child: ListBody(
+                                children: [
+                                  Text('Date: $formattedDate'),
+                                  Text('Amount: $formattedAmount'),
+                                  if (income['notes'] != null)
+                                    Text('Notes: ${income['notes']}'),
+                                  Text('Category: job salary'),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text('Close'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   );
+
+
                 },
               ),
             ),
           ],
         ),
       ),
-      // Add floating action button for adding income
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.green,
         onPressed: () {

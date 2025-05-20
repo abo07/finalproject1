@@ -19,7 +19,7 @@ class _GoalScreenState extends State<GoalScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
 
-  // Controllers for text fields
+
   final TextEditingController _goalNameController = TextEditingController();
   final TextEditingController _targetAmountController = TextEditingController();
   final TextEditingController _currentAmountController = TextEditingController();
@@ -30,7 +30,7 @@ class _GoalScreenState extends State<GoalScreen> {
     fetchGoals(); // Load goals when the screen is initialized
   }
 
-  // Method to update progress for a goal
+
   void _updateGoalProgress(int index) {
     showDialog(
       context: context,
@@ -75,7 +75,7 @@ class _GoalScreenState extends State<GoalScreen> {
   }
 
   Future<void> updateGoalInDatabase(int goalId, double newAmount) async {
-    // Implementation for updating the goal amount in the database
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userID = prefs.getInt("userID");
 
@@ -98,11 +98,11 @@ class _GoalScreenState extends State<GoalScreen> {
       return;
     }
 
-    // Format date for database (YYYY-MM-DD)
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userID = prefs.getInt("userID");
 
-    // Build the URL with all the data
+
     var url = serverPath + "goals/insertGoal.php?targetAmount=" + _targetAmountController.text +
         "&goalName=" + _goalNameController.text +
         "&paid=" + (_currentAmountController.text.isEmpty ? "0" : _currentAmountController.text) +
@@ -110,22 +110,20 @@ class _GoalScreenState extends State<GoalScreen> {
 
     print("Connecting to: " + url);
 
-    // Send the request to the server
+
     final response = await http.get(Uri.parse(url));
 
-    // For debugging
-    print("Response status: ${response.statusCode}");
-    print("Response body: ${response.body}");
 
-    // Clear the form
+
+
+
     _goalNameController.clear();
     _targetAmountController.clear();
     _currentAmountController.clear();
 
-    // Reload goals to show the newly added goal
     fetchGoals();
 
-    // Show success message
+
     ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Goal added successfully'))
     );
@@ -146,11 +144,11 @@ class _GoalScreenState extends State<GoalScreen> {
       final response = await http.get(Uri.parse(serverPath + url));
 
       if (response.statusCode == 200) {
-        // Print response for debugging
+
         print("API Response: ${response.body}");
 
         if (response.body.isNotEmpty) {
-          // Parse JSON directly
+
           final jsonData = json.decode(response.body);
           setState(() {
             _Goals = jsonData;
@@ -201,7 +199,7 @@ class _GoalScreenState extends State<GoalScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                // Goal entry form
+
                 Card(
                   elevation: 4,
                   child: Padding(
@@ -270,7 +268,7 @@ class _GoalScreenState extends State<GoalScreen> {
                 ),
                 SizedBox(height: 8),
 
-                // Display goals or a message if no goals exist
+
                 _Goals.isEmpty
                     ? Center(
                   child: Padding(
@@ -288,7 +286,7 @@ class _GoalScreenState extends State<GoalScreen> {
                   itemCount: _Goals.length,
                   itemBuilder: (context, index) {
                     final goal = _Goals[index];
-                    // Convert string values to double for calculation
+
                     final double targetAmount = double.parse(goal['targetAmount'].toString());
                     final double currentAmount = double.parse(goal['paid'].toString());
                     final double progress = targetAmount > 0 ? (currentAmount / targetAmount) : 0.0;
