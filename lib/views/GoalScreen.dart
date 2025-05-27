@@ -56,7 +56,7 @@ class _GoalScreenState extends State<GoalScreen> {
               onPressed: () async {
                 if (updateController.text.isNotEmpty) {
                   // Call API to update goal progress
-                  await updateGoalInDatabase(
+                  await addAmountGoalInDatabase(
                       _Goals[index]['goalID'],
                       double.parse(updateController.text)
                   );
@@ -74,14 +74,14 @@ class _GoalScreenState extends State<GoalScreen> {
     );
   }
 
-  Future<void> updateGoalInDatabase(int goalId, double newAmount) async {
-
+  Future<void> addAmountGoalInDatabase(int goalId, double newAmount) async {
+print("dddd");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userID = prefs.getInt("userID");
 
-    var url = serverPath + "goals/updateGoal.php?goalID=" + goalId.toString() +
+    var url = serverPath + "goals/addAmount.php?goalID=" + goalId.toString() +
         "&paid=" + newAmount.toString() +
-        "&userID=" + userID.toString();
+        "&userID=" + userID.toString() + "&addedAmount=" +newAmount.toString() ;
 
     print("Updating goal: " + url);
 
@@ -174,6 +174,7 @@ class _GoalScreenState extends State<GoalScreen> {
       print("Exception while fetching goals: $e");
     }
   }
+
 
   @override
   void dispose() {
@@ -315,6 +316,7 @@ class _GoalScreenState extends State<GoalScreen> {
                                   icon: Icon(Icons.add),
                                   onPressed: () => _updateGoalProgress(index),
                                   tooltip: 'Update progress',
+
                                 ),
                               ],
                             ),
