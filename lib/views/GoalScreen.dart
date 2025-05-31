@@ -27,7 +27,7 @@ class _GoalScreenState extends State<GoalScreen> {
   @override
   void initState() {
     super.initState();
-    fetchGoals(); // Load goals when the screen is initialized
+    fetchGoals();
   }
 
 
@@ -36,7 +36,6 @@ class _GoalScreenState extends State<GoalScreen> {
       context: context,
       builder: (context) {
         final TextEditingController updateController = TextEditingController();
-        updateController.text = _Goals[index]['paid'].toString();
         return AlertDialog(
           title: Text('Update Progress'),
           content: TextField(
@@ -45,7 +44,6 @@ class _GoalScreenState extends State<GoalScreen> {
               labelText: 'Current Amount',
               hintText: 'Enter the current amount',
             ),
-            keyboardType: TextInputType.number,
           ),
           actions: [
             TextButton(
@@ -55,13 +53,12 @@ class _GoalScreenState extends State<GoalScreen> {
             TextButton(
               onPressed: () async {
                 if (updateController.text.isNotEmpty) {
-                  // Call API to update goal progress
+
                   await addAmountGoalInDatabase(
                       _Goals[index]['goalID'],
                       double.parse(updateController.text)
                   );
 
-                  // Reload goals to reflect changes
                   fetchGoals();
                   Navigator.of(context).pop();
                 }
@@ -76,11 +73,11 @@ class _GoalScreenState extends State<GoalScreen> {
 
   Future<void> addAmountGoalInDatabase(int goalId, double newAmount) async {
 print("dddd");
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userID = prefs.getInt("userID");
 
     var url = serverPath + "goals/addAmount.php?goalID=" + goalId.toString() +
-        "&paid=" + newAmount.toString() +
         "&userID=" + userID.toString() + "&addedAmount=" +newAmount.toString() ;
 
     print("Updating goal: " + url);

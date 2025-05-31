@@ -131,7 +131,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     'Your Expenses',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  // Time frame filter dropdown
+
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
@@ -141,24 +141,39 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     child: DropdownButton<String>(
                       value: _selectedTimeFrame,
                       icon: Icon(Icons.filter_list, color: Colors.red, size: 20),
-                      underline: SizedBox(), // Remove the default underline
+                      underline: SizedBox(),
                       isDense: true,
                       style: TextStyle(color: Colors.black, fontSize: 14),
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedTimeFrame = newValue!;
-                          // In a real app, filter logic would go here
+                          _isLoading = true;
+                          _errorMessage = '';
+                        });
+
+                        // Delay to simulate loading for 1 second
+                        Future.delayed(Duration(seconds: 1), () {
+                          setState(() {
+                            _isLoading = false;
+                          });
                         });
                       },
-                      items: <String>['All Time', 'Last Month', 'Last 3 Months', 'Last 6 Months', 'Last Year']
-                          .map<DropdownMenuItem<String>>((String value) {
+
+                      items: <String>[
+                        'All Time',
+                        'Last Month',
+                        'Last 3 Months',
+                        'Last 6 Months',
+                        'Last Year'
+                      ].map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
                         );
                       }).toList(),
                     ),
-                  ),
+                  )
+
                 ],
               ),
             ),

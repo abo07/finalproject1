@@ -150,11 +150,23 @@ class _IncomeScreenState extends State<IncomeScreen> {
                       onChanged: (String? newValue) {
                         setState(() {
                           _selectedTimeFrame = newValue!;
+                          _isLoading = true;
+                          _errorMessage = '';
+                        });
 
+                        Future.delayed(Duration(seconds: 1), () {
+                          setState(() {
+                            _isLoading = false;
+                          });
                         });
                       },
-                      items: <String>['All Time', 'Last Month', 'Last 3 Months', 'Last 6 Months', 'Last Year']
-                          .map<DropdownMenuItem<String>>((String value) {
+                      items: <String>[
+                        'All Time',
+                        'Last Month',
+                        'Last 3 Months',
+                        'Last 6 Months',
+                        'Last Year'
+                      ].map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -162,6 +174,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                       }).toList(),
                     ),
                   ),
+
                 ],
               ),
             ),
